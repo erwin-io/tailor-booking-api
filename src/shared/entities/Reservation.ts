@@ -7,8 +7,6 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Clients } from "./Clients";
-import { MassCategory } from "./MassCategory";
-import { MassIntentionType } from "./MassIntentionType";
 import { ReservationStatus } from "./ReservationStatus";
 import { ReservationType } from "./ReservationType";
 
@@ -36,24 +34,6 @@ export class Reservation {
   @ManyToOne(() => Clients, (clients) => clients.reservations)
   @JoinColumn([{ name: "ClientId", referencedColumnName: "clientId" }])
   client: Clients;
-
-  @ManyToOne(() => MassCategory, (massCategory) => massCategory.reservations)
-  @JoinColumn([
-    { name: "MassCategoryId", referencedColumnName: "massCategoryId" },
-  ])
-  massCategory: MassCategory;
-
-  @ManyToOne(
-    () => MassIntentionType,
-    (massIntentionType) => massIntentionType.reservations
-  )
-  @JoinColumn([
-    {
-      name: "MassIntentionTypeId",
-      referencedColumnName: "massIntentionTypeId",
-    },
-  ])
-  massIntentionType: MassIntentionType;
 
   @ManyToOne(
     () => ReservationStatus,

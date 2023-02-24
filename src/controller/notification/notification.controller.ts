@@ -18,6 +18,7 @@ import { NotificationsDto } from "src/core/dto/notification/notification.dtos";
 
 @ApiTags("notification")
 @Controller("notification")
+@ApiBearerAuth("jwt")
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
@@ -35,6 +36,7 @@ export class NotificationController {
     required: true,
     type: Number,
   })
+  @UseGuards(JwtAuthGuard)
   async getAllByClientIdPage(
     @Query("clientId") clientId: string = "",
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page = 1,
@@ -63,6 +65,7 @@ export class NotificationController {
 
   @Get("getTotalUnreadByClientId")
   @ApiQuery({ name: "clientId", required: false })
+  @UseGuards(JwtAuthGuard)
   async getTotalUnreadByClientId(@Query("clientId") clientId: string = "") {
     const res: CustomResponse = {};
     try {
@@ -79,6 +82,7 @@ export class NotificationController {
   }
 
   @Put("updateReadStatus")
+  @UseGuards(JwtAuthGuard)
   async updateReadStatus(@Body() dto: NotificationsDto) {
     const res: CustomResponse = {};
     try {

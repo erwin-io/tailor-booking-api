@@ -12,7 +12,6 @@ import { DashboardModule } from "./controller/dashboard/dashboard.module";
 import { FirebaseProviderModule } from "./core/provider/firebase/firebase-provider.module";
 import * as Joi from "@hapi/joi";
 import { ReservationModule } from "./controller/reservation/reservation.module";
-import { RequestModule } from "./controller/request/request.module";
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 @Module({
   imports: [
@@ -32,7 +31,6 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     DashboardModule,
     FirebaseProviderModule,
     ReservationModule,
-    RequestModule,
   ],
   providers: [AppService],
   controllers: [],

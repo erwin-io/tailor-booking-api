@@ -12,6 +12,7 @@ import {
   Res,
   UploadedFile,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
 import {
@@ -28,6 +29,7 @@ import { createReadStream } from "fs";
 import { extname, join } from "path";
 import { Response } from "express";
 import { UpdateClientProfilePictureDto } from "src/core/dto/users/user.update.dto";
+import { JwtAuthGuard } from "src/core/auth/jwt.auth.guard";
 
 export class FileDto {
   @ApiProperty()
@@ -36,9 +38,11 @@ export class FileDto {
 }
 @ApiTags("file")
 @Controller("file")
+@ApiBearerAuth("jwt")
 export class FileController {
   constructor() {}
   @Get(":fileName")
+  @UseGuards(JwtAuthGuard)
   async getFile(@Param("fileName") fileName: string, @Res() res: Response) {
     try {
       // const file = createReadStream(
@@ -54,6 +58,7 @@ export class FileController {
   }
 
   @Put("upload")
+  @UseGuards(JwtAuthGuard)
   async upload(
     @UploadedFile() dto: UpdateClientProfilePictureDto,
     @Res() res: Response

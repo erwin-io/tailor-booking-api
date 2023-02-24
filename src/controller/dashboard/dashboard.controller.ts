@@ -6,12 +6,14 @@ import { DashboardService } from "src/services/dashboard.service";
 
 @Controller("dashboard")
 @ApiTags("dashboard")
+@ApiBearerAuth("jwt")
 export class DashboardController {
   constructor(private readonly dashboardServiceService: DashboardService) {}
 
   @Get("getVetAppointmentSummary")
   @ApiQuery({ name: "staffId", required: false })
   @ApiQuery({ name: "year", required: false })
+  @UseGuards(JwtAuthGuard)
   async getVetAppointmentSummary(
     @Query("staffId") staffId = "",
     @Query("year") year = new Date().getFullYear()
@@ -36,6 +38,7 @@ export class DashboardController {
   @ApiQuery({ name: "staffId", required: false })
   @ApiQuery({ name: "appointmentStatusId", required: false })
   @ApiQuery({ name: "year", required: false })
+  @UseGuards(JwtAuthGuard)
   async getVetYearlyClosedAppointmentGraph(
     @Query("staffId") staffId = "",
     @Query("appointmentStatusId") appointmentStatusId = "",
@@ -60,6 +63,7 @@ export class DashboardController {
 
   @Get("getYearlyRevenue")
   @ApiQuery({ name: "year", required: false })
+  @UseGuards(JwtAuthGuard)
   async getYearlyRevenue(@Query("year") year = new Date().getFullYear()) {
     const res: CustomResponse = {};
     try {
@@ -75,6 +79,7 @@ export class DashboardController {
 
   @Get("getYearlyRevenueGraph")
   @ApiQuery({ name: "year", required: false })
+  @UseGuards(JwtAuthGuard)
   async getYearlyRevenueGraph(@Query("year") year = new Date().getFullYear()) {
     const res: CustomResponse = {};
     try {

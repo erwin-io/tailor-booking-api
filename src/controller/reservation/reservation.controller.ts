@@ -23,14 +23,14 @@ import { ReservationService } from "src/services/reservation.service";
 
 @ApiTags("reservation")
 @Controller("reservation")
-@ApiBearerAuth()
+@ApiBearerAuth("jwt")
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Get("getByStatus")
   @ApiQuery({ name: "clientId", required: false })
   @ApiQuery({ name: "reservationStatus", required: false })
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getByStatus(
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
     @Query("clientId") clientId: string = "",
@@ -61,7 +61,7 @@ export class ReservationController {
   @ApiQuery({ name: "reservationType", required: false })
   @ApiQuery({ name: "reservationDateFrom", type: Date, required: false })
   @ApiQuery({ name: "reservationDateTo", required: false })
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getByAdvanceSearch(
     @Query("isAdvance") isAdvance: boolean,
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
@@ -97,7 +97,7 @@ export class ReservationController {
   }
 
   @Get(":reservationId")
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getById(@Param("reservationId") reservationId: string) {
     const res: CustomResponse = {};
     try {
@@ -112,7 +112,7 @@ export class ReservationController {
   }
 
   @Get("getReservationForADay/:date")
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getReservationForADay(@Param("date") dateString: string) {
     const res: CustomResponse = {};
     try {
@@ -129,7 +129,7 @@ export class ReservationController {
   }
 
   @Post("createReservation")
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async createReservation(@Body() dto: CreateReservationDto) {
     const res: CustomResponse = {};
     try {
@@ -145,7 +145,7 @@ export class ReservationController {
   }
 
   @Put("rescheduleReservation")
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async rescheduleReservation(@Body() dto: RescheduleReservationDto) {
     const res: CustomResponse = {};
     try {
@@ -161,7 +161,7 @@ export class ReservationController {
   }
 
   @Put("updateReservationStatus")
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async updateReservationStatus(@Body() dto: UpdateReservationStatusDto) {
     const res: CustomResponse = {};
     try {

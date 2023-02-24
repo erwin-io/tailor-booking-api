@@ -14,14 +14,9 @@ import { GatewayConnectedUsers } from "../entities/GatewayConnectedUsers";
 import { Reminder } from "../entities/Reminder";
 import { Files } from "../entities/Files";
 import { UserProfilePic } from "../entities/UserProfilePic";
-import { Request } from "../entities/Request";
-import { RequestType } from "../entities/RequestType";
-import { RequestStatus } from "../entities/RequestStatus";
 import { Reservation } from "../entities/Reservation";
 import { ReservationType } from "../entities/ReservationType";
 import { ReservationStatus } from "../entities/ReservationStatus";
-import { MassCategory } from "../entities/MassCategory";
-import { MassIntentionType } from "../entities/MassIntentionType";
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -50,14 +45,9 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         Reminder,
         Files,
         UserProfilePic,
-        Request,
-        RequestType,
-        RequestStatus,
         Reservation,
         ReservationType,
         ReservationStatus,
-        MassCategory,
-        MassIntentionType,
       ],
       synchronize: false, // never use TRUE in production!
       ssl: true,

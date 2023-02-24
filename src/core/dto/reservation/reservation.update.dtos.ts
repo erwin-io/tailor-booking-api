@@ -30,14 +30,6 @@ export class UpdateReservationDto extends ReservationDto {
 
   @ApiProperty()
   @IsOptional()
-  massCategoryId: string;
-
-  @ApiProperty()
-  @IsOptional()
-  massIntentionTypeId: string;
-
-  @ApiProperty()
-  @IsOptional()
   remarks: string;
 }
 

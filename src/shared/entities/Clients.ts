@@ -10,7 +10,6 @@ import {
 import { Gender } from "./Gender";
 import { Users } from "./Users";
 import { Notifications } from "./Notifications";
-import { Request } from "./Request";
 import { Reservation } from "./Reservation";
 
 @Index("pk_clients_741577680", ["clientId"], { unique: true })
@@ -66,9 +65,6 @@ export class Clients {
 
   @OneToMany(() => Notifications, (notifications) => notifications.client)
   notifications: Notifications[];
-
-  @OneToMany(() => Request, (request) => request.client)
-  requests: Request[];
 
   @OneToMany(() => Reservation, (reservation) => reservation.client)
   reservations: Reservation[];

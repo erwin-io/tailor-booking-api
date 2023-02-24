@@ -15,9 +15,6 @@ import { ReminderService } from "./reminder.service";
 import { ReservationType } from "src/shared/entities/ReservationType";
 import { ReservationStatus } from "src/shared/entities/ReservationStatus";
 import { Repository } from "typeorm";
-import { MassCategory } from "src/shared/entities/MassCategory";
-import { MassIntentionType } from "src/shared/entities/MassIntentionType";
-
 @Injectable()
 export class ReservationService {
   constructor(
@@ -50,8 +47,6 @@ export class ReservationService {
         .createQueryBuilder("Reservation", "r")
         .leftJoinAndSelect("r.reservationType", "rt")
         .leftJoinAndSelect("r.reservationStatus", "rs")
-        .leftJoinAndSelect("r.massCategory", "mc")
-        .leftJoinAndSelect("r.massIntentionType", "mit")
         .leftJoinAndSelect("r.client", "c");
       if (advanceSearch) {
         if (
@@ -62,7 +57,7 @@ export class ReservationService {
         ) {
           query = query
             .where(
-              "r.reservationDate between :reservationDateFrom and :reservationDateTo"
+              "r.reservationDate >= :reservationDateFrom and r.reservationDate <= :reservationDateTo"
             )
             .andWhere("rs.name IN(:...status)");
           params.reservationDateFrom =
@@ -83,8 +78,8 @@ export class ReservationService {
           .addOrderBy("r.reservationDate", "ASC");
       } else {
         query = query
-          .where("cast(r.reservationStatusId as character varying) like :keyword")
-          .orWhere("r.reservationDate like :keyword")
+          .where("cast(r.reservationId as character varying) like :keyword")
+          .orWhere("cast(r.reservationDate as character varying) like :keyword")
           .orWhere("rt.name like :keyword")
           .andWhere(
             "CONCAT(c.firstName, ' ', c.middleName, ' ', c.lastName) LIKE :keyword"
@@ -117,8 +112,6 @@ export class ReservationService {
         .createQueryBuilder("Reservation", "r")
         .leftJoinAndSelect("r.reservationType", "rt")
         .leftJoinAndSelect("r.reservationStatus", "rs")
-        .leftJoinAndSelect("r.massCategory", "mc")
-        .leftJoinAndSelect("r.massIntentionType", "mit")
         .leftJoinAndSelect("r.client", "c")
         .where("c.clientId = :clientId")
         .andWhere("rs.name IN(:...status)")
@@ -142,8 +135,6 @@ export class ReservationService {
           .createQueryBuilder("Reservation", "r")
           .leftJoinAndSelect("r.reservationType", "rt")
           .leftJoinAndSelect("r.reservationStatus", "rs")
-          .leftJoinAndSelect("r.massCategory", "mc")
-          .leftJoinAndSelect("r.massIntentionType", "mit")
           .leftJoinAndSelect("r.client", "c")
           .leftJoinAndSelect("c.user", "u")
           .where(options)
@@ -180,7 +171,7 @@ export class ReservationService {
       const query = await this.appointmentRepo.manager
         .createQueryBuilder("Reservation", "r")
         .leftJoinAndSelect("r.reservationStatus", "rs")
-        .where("r.reservationDate between :from and :to", dateFilter)
+        .where("r.reservationDate >= :from and r.reservationDate <= :to", dateFilter)
         .andWhere("rs.name IN(:...status)", {
           status: ["Pending", "Approved"],
         })
@@ -217,31 +208,6 @@ export class ReservationService {
             );
           }
           newReservation.reservationType = reservationType;
-
-          const massCategory = await entityManager.findOne(MassCategory, {
-            where: { massCategoryId: dto.massCategoryId },
-          });
-          if (!massCategory) {
-            throw new HttpException(
-              "Category not found!",
-              HttpStatus.BAD_REQUEST
-            );
-          }
-          newReservation.massCategory = massCategory;
-
-          const massIntentionType = await entityManager.findOne(
-            MassIntentionType,
-            {
-              where: { massIntentionTypeId: dto.massIntentionTypeId },
-            }
-          );
-          if (!massIntentionType) {
-            throw new HttpException(
-              "Intention type type not found!",
-              HttpStatus.BAD_REQUEST
-            );
-          }
-          newReservation.massIntentionType = massIntentionType;
 
           newReservation.remarks = dto.remarks;
           newReservation.client = await entityManager.findOne(Clients, {

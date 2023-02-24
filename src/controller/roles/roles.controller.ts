@@ -17,10 +17,12 @@ import { RolesService } from "../../services/roles.service";
 
 @ApiTags("roles")
 @Controller("roles")
+@ApiBearerAuth("jwt")
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll() {
     const res: CustomResponse = {};
     try {
@@ -35,6 +37,7 @@ export class RolesController {
   }
 
   @Get(":roleId")
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param("roleId") roleId: string) {
     const res: CustomResponse = {};
     try {
@@ -49,6 +52,7 @@ export class RolesController {
   }
 
   @Put("")
+  @UseGuards(JwtAuthGuard)
   async update(@Body() roleDto: RoleAccessDto) {
     const res: CustomResponse = {};
     try {

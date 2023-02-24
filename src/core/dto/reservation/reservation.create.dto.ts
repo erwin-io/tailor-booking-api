@@ -31,13 +31,5 @@ export class CreateReservationDto {
 
   @ApiProperty()
   @IsOptional()
-  massCategoryId: string;
-
-  @ApiProperty()
-  @IsOptional()
-  massIntentionTypeId: string;
-
-  @ApiProperty()
-  @IsOptional()
   remarks: string;
 }

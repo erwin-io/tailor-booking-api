@@ -40,6 +40,7 @@ import { unlinkSync } from "fs";
 
 @ApiTags("users")
 @Controller("users")
+@ApiBearerAuth("jwt")
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
@@ -50,6 +51,7 @@ export class UsersController {
     required: true,
     type: String,
   })
+  @UseGuards(JwtAuthGuard)
   async findAll(@Query("userTypeId") userTypeId?) {
     const res: CustomResponse = {};
     try {
@@ -72,6 +74,7 @@ export class UsersController {
   @ApiQuery({ name: "email", required: false })
   @ApiQuery({ name: "mobileNumber", required: false })
   @ApiQuery({ name: "name", required: false })
+  @UseGuards(JwtAuthGuard)
   async getStaffByAdvanceSearch(
     @Query("isAdvance") isAdvance: boolean,
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
@@ -118,6 +121,7 @@ export class UsersController {
   @ApiQuery({ name: "email", required: false })
   @ApiQuery({ name: "mobileNumber", required: false })
   @ApiQuery({ name: "name", required: false })
+  @UseGuards(JwtAuthGuard)
   async getClientByAdvanceSearch(
     @Query("isAdvance") isAdvance: boolean,
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
@@ -154,6 +158,7 @@ export class UsersController {
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param("id") userId: string) {
     const res: CustomResponse = {};
     try {
@@ -168,6 +173,7 @@ export class UsersController {
   }
 
   @Post("/client")
+  @UseGuards(JwtAuthGuard)
   async createClient(@Body() clientUserDto: ClientUserDto) {
     const res: CustomResponse = {};
     try {
@@ -182,6 +188,7 @@ export class UsersController {
   }
 
   @Post("/staff")
+  @UseGuards(JwtAuthGuard)
   async createStaff(@Body() createStaffUserDto: CreateStaffUserDto) {
     const res: CustomResponse = {};
     try {
@@ -196,6 +203,7 @@ export class UsersController {
   }
 
   @Put("/client")
+  @UseGuards(JwtAuthGuard)
   async updateClientUser(@Body() clientUserDto: UpdateClientUserDto) {
     const res: CustomResponse = {};
     try {
@@ -211,6 +219,7 @@ export class UsersController {
   }
 
   @Put("/clientProfilePicture")
+  @UseGuards(JwtAuthGuard)
   async updateClientProfilePicture(@Body() dto: UpdateClientProfilePictureDto) {
     const res: CustomResponse = {};
     try {
@@ -226,6 +235,7 @@ export class UsersController {
   }
 
   @Put("/staff")
+  @UseGuards(JwtAuthGuard)
   async updateStaffUser(@Body() staffUserDto: UpdateStaffUserDto) {
     const res: CustomResponse = {};
     try {
@@ -241,6 +251,7 @@ export class UsersController {
   }
 
   @Put("/changePassword")
+  @UseGuards(JwtAuthGuard)
   async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     const res: CustomResponse = {};
     try {
@@ -260,6 +271,7 @@ export class UsersController {
   }
 
   @Put("/udpdatePassword")
+  @UseGuards(JwtAuthGuard)
   async udpdatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
     const res: CustomResponse = {};
     try {
@@ -278,6 +290,7 @@ export class UsersController {
   }
 
   @Put("/updateFirebaseToken")
+  @UseGuards(JwtAuthGuard)
   async updateFirebaseToken(@Body() updateFirebaseToken: UpdateFirebaseToken) {
     const res: CustomResponse = {};
     try {
@@ -296,6 +309,7 @@ export class UsersController {
   }
 
   @Put("/toggleEnable")
+  @UseGuards(JwtAuthGuard)
   async toggleEnable(@Body() toggleEnableDto: ToggleEnableDto) {
     const res: CustomResponse = {};
     try {

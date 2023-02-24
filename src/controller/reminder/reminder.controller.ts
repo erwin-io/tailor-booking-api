@@ -8,7 +8,7 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { CustomResponse } from "src/common/helper/customresponse.helpers";
 import { JwtAuthGuard } from "src/core/auth/jwt.auth.guard";
 import { CreateReminderDto } from "src/core/dto/reminder/reminder.create.dto";
@@ -16,10 +16,12 @@ import { ReminderService } from "src/services/reminder.service";
 
 @ApiTags("reminder")
 @Controller("reminder")
+@ApiBearerAuth("jwt")
 export class ReminderController {
   constructor(private readonly reminderService: ReminderService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll() {
     const res: CustomResponse = {};
     try {
@@ -35,6 +37,7 @@ export class ReminderController {
 
   @Get("geAllReminderByDate")
   @ApiQuery({ name: "filterDate", type: Date, required: false })
+  @UseGuards(JwtAuthGuard)
   async geAllReminderByDate(
     @Query("filterDate")
     filterDate: Date
@@ -55,6 +58,7 @@ export class ReminderController {
   }
 
   @Get(":reminderId")
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param("reminderId") reminderId: string) {
     const res: CustomResponse = {};
     try {
