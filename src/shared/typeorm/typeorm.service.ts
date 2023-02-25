@@ -1,9 +1,9 @@
-import { EntityStatus } from "./../entities/EntityStatus";
-import { UserType } from "./../entities/UserType";
-import { Gender } from "./../entities/Gender";
-import { Staff } from "./../entities/Staff";
-import { Clients } from "./../entities/Clients";
-import { Users } from "./../entities/Users";
+import { EntityStatus } from "../entities/EntityStatus";
+import { UserType } from "../entities/UserType";
+import { Gender } from "../entities/Gender";
+import { Staff } from "../entities/Staff";
+import { Clients } from "../entities/Clients";
+import { Users } from "../entities/Users";
 import { Injectable, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from "@nestjs/typeorm";
