@@ -20,8 +20,8 @@ export class Messages {
   @Column("timestamp without time zone", { name: "DateTime" })
   dateTime: Date;
 
-  @Column("boolean", { name: "IsClient", default: () => "false" })
-  isClient: boolean;
+  @Column("boolean", { name: "IsCustomer", default: () => "false" })
+  isCustomer: boolean;
 
   @ManyToOne(() => Users, (users) => users.messages)
   @JoinColumn([{ name: "FromUserId", referencedColumnName: "userId" }])

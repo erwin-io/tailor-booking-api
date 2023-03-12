@@ -28,7 +28,7 @@ import { IsNotEmpty } from "class-validator";
 import { createReadStream } from "fs";
 import { extname, join } from "path";
 import { Response } from "express";
-import { UpdateClientProfilePictureDto } from "src/core/dto/users/user.update.dto";
+import { UpdateCustomerProfilePictureDto } from "src/core/dto/users/user.update.dto";
 import { JwtAuthGuard } from "src/core/auth/jwt.auth.guard";
 
 export class FileDto {
@@ -60,7 +60,7 @@ export class FileController {
   @Put("upload")
   @UseGuards(JwtAuthGuard)
   async upload(
-    @UploadedFile() dto: UpdateClientProfilePictureDto,
+    @UploadedFile() dto: UpdateCustomerProfilePictureDto,
     @Res() res: Response
   ) {
     try {

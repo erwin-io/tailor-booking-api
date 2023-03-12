@@ -9,50 +9,6 @@ export class ReservationDto {
   reservationId: string;
 }
 
-export class UpdateReservationDto extends ReservationDto {
-  @ApiProperty({
-    type: Date,
-    default: moment().format("YYYY-MM-DD"),
-  })
-  @IsDateString()
-  @Type(() => Date)
-  @Transform((value) => moment(new Date(value.value)).format("YYYY-MM-DD"))
-  @IsNotEmpty()
-  reservationDate: Date;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  clientId: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  reservationTypeId: string;
-
-  @ApiProperty()
-  @IsOptional()
-  remarks: string;
-}
-
-
-export class RescheduleReservationDto extends ReservationDto {
-  @ApiProperty({
-    type: Date,
-    default: moment().format("YYYY-MM-DD"),
-  })
-  @IsDateString()
-  @Type(() => Date)
-  @Transform((value) => moment(new Date(value.value)).format("YYYY-MM-DD"))
-  @IsNotEmpty()
-  reservationDate: Date;
-
-  @ApiProperty({
-    default: moment().format("HH:MM"),
-  })
-  @IsMilitaryTime()
-  @IsNotEmpty()
-  time: string;
-}
-
 export class UpdateReservationStatusDto extends ReservationDto {
   @ApiProperty()
   @IsNotEmpty()
@@ -61,4 +17,20 @@ export class UpdateReservationStatusDto extends ReservationDto {
   @ApiProperty()
   @IsOptional()
   adminRemarks;
+}
+
+export class ProcessOrderDto extends ReservationDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  staffId: string;
+  
+  @ApiProperty({
+    type: Date,
+    default: moment().format("YYYY-MM-DD"),
+  })
+  @IsDateString()
+  @Type(() => Date)
+  @Transform((value) => moment(new Date(value.value)).format("YYYY-MM-DD"))
+  @IsNotEmpty()
+  estCompletionDate: Date;
 }

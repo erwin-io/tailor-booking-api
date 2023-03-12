@@ -1,9 +1,9 @@
-import { Clients } from "src/shared/entities/Clients";
+import { Customers } from "src/shared/entities/Customers";
 import { GenderViewModel } from "./gender.view-model";
 import { UserViewModel } from "./user.view-model";
 
-export class ClientViewModel {
-  clientId: string;
+export class CustomerViewModel {
+  customerId: string;
   firstName: string;
   middleName: string;
   lastName: string;
@@ -15,11 +15,11 @@ export class ClientViewModel {
   user: UserViewModel;
   birthDate: string;
   age: string;
-  constructor(model: Clients | undefined) {
+  constructor(model: Customers | undefined) {
     if (!model || model === null) {
       return null;
     }
-    this.clientId = model.clientId;
+    this.customerId = model.customerId;
     this.firstName = model.firstName;
     this.middleName = model.middleName;
     this.lastName = model.lastName;

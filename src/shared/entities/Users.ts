@@ -8,7 +8,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Clients } from "./Clients";
+import { Customers } from "./Customers";
 import { GatewayConnectedUsers } from "./GatewayConnectedUsers";
 import { Messages } from "./Messages";
 import { Staff } from "./Staff";
@@ -41,8 +41,8 @@ export class Users {
   @Column("boolean", { name: "Enable", default: () => "true" })
   enable: boolean;
 
-  @OneToMany(() => Clients, (clients) => clients.user)
-  clients: Clients[];
+  @OneToMany(() => Customers, (customers) => customers.user)
+  customers: Customers[];
 
   @OneToMany(
     () => GatewayConnectedUsers,

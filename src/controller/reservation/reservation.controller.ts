@@ -16,7 +16,7 @@ import { CustomResponse } from "src/common/helper/customresponse.helpers";
 import { JwtAuthGuard } from "src/core/auth/jwt.auth.guard";
 import { CreateReservationDto } from "src/core/dto/reservation/reservation.create.dto";
 import {
-  RescheduleReservationDto,
+  ProcessOrderDto,
   UpdateReservationStatusDto,
 } from "src/core/dto/reservation/reservation.update.dtos";
 import { ReservationService } from "src/services/reservation.service";
@@ -28,12 +28,12 @@ export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Get("getByStatus")
-  @ApiQuery({ name: "clientId", required: false })
+  @ApiQuery({ name: "customerId", required: false })
   @ApiQuery({ name: "reservationStatus", required: false })
   @UseGuards(JwtAuthGuard)
   async getByStatus(
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-    @Query("clientId") clientId: string = "",
+    @Query("customerId") customerId: string = "",
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
     @Query("reservationStatus")
     reservationStatus: string = ""
@@ -41,7 +41,7 @@ export class ReservationController {
     const res: CustomResponse = {};
     try {
       res.data = await this.reservationService.getByStatus(
-        clientId,
+        customerId,
         reservationStatus.trim() === "" ? [] : reservationStatus.split(",")
       );
       res.success = true;
@@ -56,9 +56,9 @@ export class ReservationController {
   @Get("getByAdvanceSearch")
   @ApiQuery({ name: "isAdvance", required: false })
   @ApiQuery({ name: "keyword", required: false })
-  @ApiQuery({ name: "clientName", required: false })
+  @ApiQuery({ name: "customerName", required: false })
   @ApiQuery({ name: "reservationStatus", required: false })
-  @ApiQuery({ name: "reservationType", required: false })
+  @ApiQuery({ name: "category", required: false })
   @ApiQuery({ name: "reservationDateFrom", type: Date, required: false })
   @ApiQuery({ name: "reservationDateTo", required: false })
   @UseGuards(JwtAuthGuard)
@@ -67,12 +67,11 @@ export class ReservationController {
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
     @Query("keyword") keyword: string = "",
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-    @Query("clientName") clientName: string = "",
+    @Query("customerName") customerName: string = "",
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
     @Query("reservationStatus")
     reservationStatus: string = "",
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-    @Query("reservationType") reservationType: string = "",
     @Query("reservationDateFrom") reservationDateFrom: Date,
     @Query("reservationDateTo") reservationDateTo: Date
   ) {
@@ -81,9 +80,8 @@ export class ReservationController {
       res.data = await this.reservationService.findByFilter(
         isAdvance,
         keyword,
-        clientName,
+        customerName,
         reservationStatus.trim() === "" ? [] : reservationStatus.split(","),
-        reservationType.trim() === "" ? [] : reservationType.split(","),
         reservationDateFrom,
         reservationDateTo
       );
@@ -111,23 +109,6 @@ export class ReservationController {
     }
   }
 
-  @Get("getReservationForADay/:date")
-  @UseGuards(JwtAuthGuard)
-  async getReservationForADay(@Param("date") dateString: string) {
-    const res: CustomResponse = {};
-    try {
-      res.data = await this.reservationService.getReservationForADay(
-        dateString
-      );
-      res.success = true;
-      return res;
-    } catch (e) {
-      res.success = false;
-      res.message = e.message !== undefined ? e.message : e;
-      return res;
-    }
-  }
-
   @Post("createReservation")
   @UseGuards(JwtAuthGuard)
   async createReservation(@Body() dto: CreateReservationDto) {
@@ -144,13 +125,13 @@ export class ReservationController {
     }
   }
 
-  @Put("rescheduleReservation")
+  @Put("updateReservationStatus")
   @UseGuards(JwtAuthGuard)
-  async rescheduleReservation(@Body() dto: RescheduleReservationDto) {
+  async updateReservationStatus(@Body() dto: UpdateReservationStatusDto) {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};
-      res.data = await this.reservationService.updateSchedule(dto);
+      res.data = await this.reservationService.updateStatus(dto);
       res.success = true;
       return res;
     } catch (e) {
@@ -160,13 +141,13 @@ export class ReservationController {
     }
   }
 
-  @Put("updateReservationStatus")
+  @Put("processOrder")
   @UseGuards(JwtAuthGuard)
-  async updateReservationStatus(@Body() dto: UpdateReservationStatusDto) {
+  async processOrder(@Body() dto: ProcessOrderDto) {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};
-      res.data = await this.reservationService.updateStatus(dto);
+      res.data = await this.reservationService.processOrder(dto);
       res.success = true;
       return res;
     } catch (e) {

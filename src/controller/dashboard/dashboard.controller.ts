@@ -10,21 +10,17 @@ import { DashboardService } from "src/services/dashboard.service";
 export class DashboardController {
   constructor(private readonly dashboardServiceService: DashboardService) {}
 
-  @Get("getVetAppointmentSummary")
-  @ApiQuery({ name: "staffId", required: false })
+  @Get("getTotalDueForAMonthBy")
+  @ApiQuery({ name: "month", required: false })
   @ApiQuery({ name: "year", required: false })
   @UseGuards(JwtAuthGuard)
-  async getVetAppointmentSummary(
-    @Query("staffId") staffId = "",
+  async getTotalDueForAMonthBy(
+    @Query("month") month = new Date().getMonth(),
     @Query("year") year = new Date().getFullYear()
   ) {
     const res: CustomResponse = {};
     try {
-      // res.data =
-      //   await this.dashboardServiceService.getVetYearlyAppointmentSummary(
-      //     staffId,
-      //     year
-      //   );
+      res.data = await this.dashboardServiceService.getTotalDueForAMonthBy(Number(month), Number(year))
       res.success = true;
       return res;
     } catch (e) {
@@ -34,24 +30,17 @@ export class DashboardController {
     }
   }
 
-  @Get("getVetYearlyAppointmentGraph")
-  @ApiQuery({ name: "staffId", required: false })
-  @ApiQuery({ name: "appointmentStatusId", required: false })
-  @ApiQuery({ name: "year", required: false })
+  @Get("getTotalDueByDays")
+  @ApiQuery({ name: "date", required: false })
+  @ApiQuery({ name: "days", required: false })
   @UseGuards(JwtAuthGuard)
-  async getVetYearlyClosedAppointmentGraph(
-    @Query("staffId") staffId = "",
-    @Query("appointmentStatusId") appointmentStatusId = "",
-    @Query("year") year = new Date().getFullYear()
+  async getTotalDueByDays(
+    @Query("days") days = 1,
+    @Query("date") date = new Date()
   ) {
     const res: CustomResponse = {};
     try {
-      // res.data =
-      //   await this.dashboardServiceService.getVetYearlyAppointmentGraph(
-      //     staffId,
-      //     appointmentStatusId,
-      //     year
-      //   );
+      res.data = await this.dashboardServiceService.getTotalDueByDays(Number(days), new Date(date))
       res.success = true;
       return res;
     } catch (e) {
@@ -61,13 +50,15 @@ export class DashboardController {
     }
   }
 
-  @Get("getYearlyRevenue")
-  @ApiQuery({ name: "year", required: false })
+  @Get("getTotalOverDue")
+  @ApiQuery({ name: "date", required: false })
   @UseGuards(JwtAuthGuard)
-  async getYearlyRevenue(@Query("year") year = new Date().getFullYear()) {
+  async getTotalOverDue(
+    @Query("date") date = new Date()
+  ) {
     const res: CustomResponse = {};
     try {
-      // res.data = await this.dashboardServiceService.getYearlyRevenue(year);
+      res.data = await this.dashboardServiceService.getTotalOverDue(new Date(date))
       res.success = true;
       return res;
     } catch (e) {
@@ -77,13 +68,15 @@ export class DashboardController {
     }
   }
 
-  @Get("getYearlyRevenueGraph")
-  @ApiQuery({ name: "year", required: false })
+  @Get("getCustomerDashboard")
+  @ApiQuery({ name: "customerId", required: false })
   @UseGuards(JwtAuthGuard)
-  async getYearlyRevenueGraph(@Query("year") year = new Date().getFullYear()) {
+  async getCustomerDashboard(
+    @Query("customerId") customerId = ""
+  ) {
     const res: CustomResponse = {};
     try {
-      // res.data = await this.dashboardServiceService.getYearlyRevenueGraph(year);
+      res.data = await this.dashboardServiceService.getCustomerDashboard(customerId)
       res.success = true;
       return res;
     } catch (e) {

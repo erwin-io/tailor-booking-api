@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
 import { IsDateString, IsMilitaryTime, IsNotEmpty, IsOptional } from "class-validator";
 import * as moment from "moment";
+import { CreateOrderItemDto } from "../order-item/order-item.create.dto";
 
 export class CreateReservationDto {
   @ApiProperty({
@@ -12,24 +13,27 @@ export class CreateReservationDto {
   @Type(() => Date)
   @Transform((value) => moment(new Date(value.value)).format("YYYY-MM-DD"))
   @IsNotEmpty()
-  reservationDate: Date;
-
-  @ApiProperty({
-    default: moment().format("HH:MM"),
-  })
-  @IsMilitaryTime()
-  @IsNotEmpty()
-  time: string;
+  reqCompletionDate: Date;
 
   @ApiProperty()
   @IsNotEmpty()
-  clientId: string;
+  customerId: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  reservationTypeId: string;
+  reservationLevelId: string;
 
   @ApiProperty()
   @IsOptional()
-  remarks: string;
+  description: string;
+
+  @ApiProperty({
+    isArray: true,
+    type: CreateOrderItemDto
+  })
+  @IsNotEmpty()
+  orderItems: CreateOrderItemDto[] = [];
 }
+
+
+

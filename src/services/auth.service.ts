@@ -1,5 +1,5 @@
 import { Users } from "../shared/entities/Users";
-import { ClientUserDto, StaffUserDto } from "../core/dto/users/user.create.dto";
+import { CustomerUserDto, StaffUserDto } from "../core/dto/users/user.create.dto";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { UsersService } from "../services/users.service";
 import { LoginUserDto } from "../core/dto/users/user-login.dto";
@@ -20,8 +20,8 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async registerClient(userDto: ClientUserDto) {
-    return await this.usersService.registerClientUser(userDto);
+  async registerCustomer(userDto: CustomerUserDto) {
+    return await this.usersService.registerCustomerUser(userDto);
   }
 
   async registerStaff(userDto: StaffUserDto) {
@@ -45,8 +45,8 @@ export class AuthService {
     await this.updateRefreshTokenInUser(refreshToken, userId);
     const userType = getInfo.user.userType;
     const userTypeIdentityId =
-      userType.userTypeId === UserTypeEnum.CLIENT
-        ? getInfo.clientid
+      userType.userTypeId === UserTypeEnum.CUSTOMER
+        ? getInfo.customerid
         : getInfo.staffid;
     const { fullName, email, mobileNumber, address, birthDate, age, gender } =
       getInfo;
@@ -91,8 +91,8 @@ export class AuthService {
     await this.updateRefreshTokenInUser(refreshToken, userId);
     const userType = getInfo.user.userType;
     const userTypeIdentityId =
-      userType.userTypeId === UserTypeEnum.CLIENT
-        ? getInfo.clientid
+      userType.userTypeId === UserTypeEnum.CUSTOMER
+        ? getInfo.customerid
         : getInfo.staffid;
     const { fullName, email, mobileNumber, address, birthDate, age, gender } =
       getInfo;
@@ -117,9 +117,9 @@ export class AuthService {
     };
   }
 
-  async loginClient({ username, password }: any) {
+  async loginCustomer({ username, password }: any) {
     // find user in db
-    const user: Users = await this.usersService.findByLoginCLient(
+    const user: Users = await this.usersService.findByLoginCustomer(
       username,
       password
     );
@@ -137,11 +137,11 @@ export class AuthService {
     await this.updateRefreshTokenInUser(refreshToken, userId);
     const userType = getInfo.user.userType;
     const userTypeIdentityId =
-      userType.userTypeId === UserTypeEnum.CLIENT
-        ? getInfo.clientid
+      userType.userTypeId === UserTypeEnum.CUSTOMER
+        ? getInfo.customerid
         : getInfo.staffid;
     const {
-      clientId,
+      customerId,
       firstName,
       middleName,
       lastName,
@@ -157,7 +157,7 @@ export class AuthService {
     } = getInfo;
 
     return {
-      clientId,
+      customerId,
       userId,
       username,
       userType,

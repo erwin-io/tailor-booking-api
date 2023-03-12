@@ -10,7 +10,7 @@ export class CreateMessageDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  isClient: boolean;
+  isCustomer: boolean;
 
   @ApiProperty()
   @IsNotEmpty()

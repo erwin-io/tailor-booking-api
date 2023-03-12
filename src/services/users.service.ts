@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Clients } from "../shared/entities/Clients";
+import { Customers } from "../shared/entities/Customers";
 import {
-  UpdateClientProfilePictureDto,
-  UpdateClientUserDto,
+  UpdateCustomerProfilePictureDto,
+  UpdateCustomerUserDto,
   UpdateStaffUserDto,
   UserDto,
 } from "../core/dto/users/user.update.dto";
@@ -10,7 +10,7 @@ import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EntityManager, Repository } from "typeorm";
 import {
-  ClientUserDto,
+  CustomerUserDto,
   CreateStaffUserDto,
   StaffUserDto,
 } from "../core/dto/users/user.create.dto";
@@ -28,7 +28,7 @@ import { EntityStatus } from "../shared/entities/EntityStatus";
 import { Roles } from "../shared/entities/Roles";
 import { RoleEnum } from "src/common/enums/role.enum";
 import { StaffViewModel } from "src/core/view-model/staff.view-model";
-import { ClientViewModel } from "src/core/view-model/client.view-model";
+import { CustomerViewModel } from "src/core/view-model/customer.view-model";
 import { UserViewModel } from "src/core/view-model/user.view-model";
 import { UserTypeEnum } from "src/common/enums/user-type.enum";
 import { FirebaseProvider } from "src/core/provider/firebase/firebase-provider";
@@ -61,17 +61,17 @@ export class UsersService {
         return new StaffViewModel(s);
       });
     } else if (Number(userTypeId) === 2) {
-      const query = <Clients[]>(
+      const query = <Customers[]>(
         await this.userRepo.manager
-          .createQueryBuilder("Clients", "s")
+          .createQueryBuilder("Customers", "s")
           .innerJoinAndSelect("s.gender", "g")
           .innerJoinAndSelect("s.user", "u")
           .innerJoinAndSelect("u.role", "r")
           .innerJoinAndSelect("u.userType", "ut")
           .getMany()
       );
-      return query.map((c: Clients) => {
-        return new ClientViewModel(c);
+      return query.map((c: Customers) => {
+        return new CustomerViewModel(c);
       });
     }
   }
@@ -127,7 +127,7 @@ export class UsersService {
     });
   }
 
-  async findClientUserByFilter(
+  async findCustomerUserByFilter(
     advanceSearch: boolean,
     keyword: string,
     userId: string,
@@ -140,7 +140,7 @@ export class UsersService {
       keyword: `%${keyword}%`,
     };
     let query = await this.userRepo.manager
-      .createQueryBuilder("Clients", "c")
+      .createQueryBuilder("Customers", "c")
       .innerJoinAndSelect("c.gender", "g")
       .innerJoinAndSelect("c.user", "u")
       .innerJoinAndSelect("u.role", "r")
@@ -173,8 +173,8 @@ export class UsersService {
         .orderBy("u.userId", "DESC");
     }
     query = query.setParameters(params);
-    return (<Clients[]>await query.getMany()).map((c: Clients) => {
-      return new ClientViewModel(c);
+    return (<Customers[]>await query.getMany()).map((c: Customers) => {
+      return new CustomerViewModel(c);
     });
   }
 
@@ -224,7 +224,7 @@ export class UsersService {
       }
       return result;
     } else {
-      const result: any = await entityManager.findOne(Clients, {
+      const result: any = await entityManager.findOne(Customers, {
         where: {
           user: options,
         },
@@ -317,7 +317,7 @@ export class UsersService {
     return this._sanitizeUser(result.user);
   }
 
-  async findByLoginCLient(username, password) {
+  async findByLoginCustomer(username, password) {
     const result = await this.findOne(
       { username, userType: { userTypeId: 2 } },
       false,
@@ -336,7 +336,7 @@ export class UsersService {
     return this._sanitizeUser(result.user);
   }
 
-  async registerClientUser(userDto: ClientUserDto) {
+  async registerCustomerUser(userDto: CustomerUserDto) {
     const { username } = userDto;
     return await this.userRepo.manager.transaction(async (entityManager) => {
       const userInDb = await this.findOne({ username }, false, entityManager);
@@ -347,27 +347,27 @@ export class UsersService {
       user.username = userDto.username;
       user.password = await hash(userDto.password);
       user.userType = new UserType();
-      user.userType.userTypeId = UserTypeEnum.CLIENT.toString();
+      user.userType.userTypeId = UserTypeEnum.CUSTOMER.toString();
       user.role = new Roles();
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus = new EntityStatus();
       user.entityStatus.entityStatusId = "1";
       user = await entityManager.save(Users, user);
-      let client = new Clients();
-      client.user = user;
-      client.firstName = userDto.firstName;
-      client.middleName = userDto.middleName;
-      client.lastName = userDto.lastName;
-      client.email = userDto.email;
-      client.mobileNumber = userDto.mobileNumber;
-      client.birthDate = moment(userDto.birthDate).format("YYYY-MM-DD");
-      client.age = await (await getAge(new Date(userDto.birthDate))).toString();
-      client.address = userDto.address;
-      client.gender = new Gender();
-      client.gender.genderId = userDto.genderId;
-      client = await entityManager.save(Clients, client);
-      client.user = await this._sanitizeUser(user);
-      return client;
+      let customer = new Customers();
+      customer.user = user;
+      customer.firstName = userDto.firstName;
+      customer.middleName = userDto.middleName;
+      customer.lastName = userDto.lastName;
+      customer.email = userDto.email;
+      customer.mobileNumber = userDto.mobileNumber;
+      customer.birthDate = moment(userDto.birthDate).format("YYYY-MM-DD");
+      customer.age = await (await getAge(new Date(userDto.birthDate))).toString();
+      customer.address = userDto.address;
+      customer.gender = new Gender();
+      customer.gender.genderId = userDto.genderId;
+      customer = await entityManager.save(Customers, customer);
+      customer.user = await this._sanitizeUser(user);
+      return customer;
     });
   }
 
@@ -402,7 +402,7 @@ export class UsersService {
     });
   }
 
-  async createClientUser(userDto: ClientUserDto) {
+  async createCustomerUser(userDto: CustomerUserDto) {
     const { username } = userDto;
 
     return await this.userRepo.manager.transaction(async (entityManager) => {
@@ -414,28 +414,28 @@ export class UsersService {
       user.username = userDto.username;
       user.password = await hash(userDto.password);
       user.userType = new UserType();
-      user.userType.userTypeId = UserTypeEnum.CLIENT.toString();
+      user.userType.userTypeId = UserTypeEnum.CUSTOMER.toString();
       user.entityStatus = new EntityStatus();
       user.role = new Roles();
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus.entityStatusId = "1";
       user.isAdminApproved = true;
       user = await entityManager.save(Users, user);
-      let client = new Clients();
-      client.user = user;
-      client.firstName = userDto.firstName;
-      client.middleName = userDto.middleName;
-      client.lastName = userDto.lastName;
-      client.email = userDto.email;
-      client.mobileNumber = userDto.mobileNumber;
-      client.address = userDto.address;
-      client.birthDate = moment(userDto.birthDate).format("YYYY-MM-DD");
-      client.age = (await getAge(new Date(userDto.birthDate))).toString();
-      client.gender = new Gender();
-      client.gender.genderId = userDto.genderId;
-      client = await entityManager.save(Clients, client);
-      client.user = await this._sanitizeUser(user);
-      return client;
+      let customer = new Customers();
+      customer.user = user;
+      customer.firstName = userDto.firstName;
+      customer.middleName = userDto.middleName;
+      customer.lastName = userDto.lastName;
+      customer.email = userDto.email;
+      customer.mobileNumber = userDto.mobileNumber;
+      customer.address = userDto.address;
+      customer.birthDate = moment(userDto.birthDate).format("YYYY-MM-DD");
+      customer.age = (await getAge(new Date(userDto.birthDate))).toString();
+      customer.gender = new Gender();
+      customer.gender.genderId = userDto.genderId;
+      customer = await entityManager.save(Customers, customer);
+      customer.user = await this._sanitizeUser(user);
+      return customer;
     });
   }
 
@@ -471,11 +471,11 @@ export class UsersService {
     });
   }
 
-  async updateClientUser(userDto: UpdateClientUserDto) {
+  async updateCustomerUser(userDto: UpdateCustomerUserDto) {
     const userId = userDto.userId;
 
     return await this.userRepo.manager.transaction(async (entityManager) => {
-      let client: any = await this.findOne(
+      let customer: any = await this.findOne(
         {
           userId,
           userType: { userTypeId: "2" },
@@ -483,31 +483,31 @@ export class UsersService {
         true,
         entityManager
       );
-      if (!client) {
+      if (!customer) {
         throw new HttpException(`User doesn't exist`, HttpStatus.NOT_FOUND);
       }
-      const user: Users = client.user;
-      client.firstName = userDto.firstName;
-      client.middleName = userDto.middleName;
-      client.lastName = userDto.lastName;
-      client.email = userDto.email;
-      client.mobileNumber = userDto.mobileNumber;
-      client.birthDate = userDto.birthDate;
-      client.age = await (await getAge(userDto.birthDate)).toString();
-      client.address = userDto.address;
-      client.gender = new Gender();
-      client.gender.genderId = userDto.genderId;
-      await entityManager.save(Clients, client);
-      client = await this.findOne({ userId }, true, entityManager);
+      const user: Users = customer.user;
+      customer.firstName = userDto.firstName;
+      customer.middleName = userDto.middleName;
+      customer.lastName = userDto.lastName;
+      customer.email = userDto.email;
+      customer.mobileNumber = userDto.mobileNumber;
+      customer.birthDate = userDto.birthDate;
+      customer.age = await (await getAge(userDto.birthDate)).toString();
+      customer.address = userDto.address;
+      customer.gender = new Gender();
+      customer.gender.genderId = userDto.genderId;
+      await entityManager.save(Customers, customer);
+      customer = await this.findOne({ userId }, true, entityManager);
 
-      return client;
+      return customer;
     });
   }
 
-  async updateClientProfilePicture(dto: UpdateClientProfilePictureDto) {
+  async updateCustomerProfilePicture(dto: UpdateCustomerProfilePictureDto) {
     const userId = dto.userId;
     return await this.userRepo.manager.transaction(async (entityManager) => {
-      let client: any = await this.findOne(
+      let customer: any = await this.findOne(
         {
           userId,
           userType: { userTypeId: "2" },
@@ -515,10 +515,10 @@ export class UsersService {
         true,
         entityManager
       );
-      if (!client) {
+      if (!customer) {
         throw new HttpException(`User doesn't exist`, HttpStatus.NOT_FOUND);
       }
-      const user: Users = client.user;
+      const user: Users = customer.user;
       if (dto.userProfilePic) {
         const newFileName: string = uuid();
         let userProfilePic = await entityManager.findOne(UserProfilePic, {
@@ -558,8 +558,8 @@ export class UsersService {
               UserProfilePic,
               userProfilePic
             );
-            client = await this.findOne({ userId }, true, entityManager);
-            return client;
+            customer = await this.findOne({ userId }, true, entityManager);
+            return customer;
           });
         } else {
           userProfilePic = new UserProfilePic();

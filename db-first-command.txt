@@ -1,1 +1,1 @@
-npx typeorm-model-generator -h ep-misty-field-545254.us-east-2.aws.neon.tech -d reservation -u erwinramirez220 -x 8HiTIl1swdvo --ssl true -e postgres -s dbo -p 5432 -o src/shared
+npx typeorm-model-generator -h localhost -d reservation -u postgres -x admin123 --ssl false -e postgres -s dbo -p 5432 -o src/shared

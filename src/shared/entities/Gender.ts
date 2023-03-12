@@ -1,5 +1,5 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
-import { Clients } from "./Clients";
+import { Customers } from "./Customers";
 import { Staff } from "./Staff";
 
 @Index("pk_gender_965578478", ["genderId"], { unique: true })
@@ -11,8 +11,8 @@ export class Gender {
   @Column("character varying", { name: "Name", length: 100 })
   name: string;
 
-  @OneToMany(() => Clients, (clients) => clients.gender)
-  clients: Clients[];
+  @OneToMany(() => Customers, (customers) => customers.gender)
+  customers: Customers[];
 
   @OneToMany(() => Staff, (staff) => staff.gender)
   staff: Staff[];

@@ -12,11 +12,11 @@ import { Users } from "./Users";
 import { Notifications } from "./Notifications";
 import { Reservation } from "./Reservation";
 
-@Index("pk_clients_741577680", ["clientId"], { unique: true })
-@Entity("Clients", { schema: "dbo" })
-export class Clients {
-  @PrimaryGeneratedColumn({ type: "bigint", name: "ClientId" })
-  clientId: string;
+@Index("pk_customers_741577680", ["customerId"], { unique: true })
+@Entity("Customers", { schema: "dbo" })
+export class Customers {
+  @PrimaryGeneratedColumn({ type: "bigint", name: "CustomerId" })
+  customerId: string;
 
   @Column("character varying", { name: "FirstName", length: 250 })
   firstName: string;
@@ -55,17 +55,17 @@ export class Clients {
   @Column("bigint", { name: "NumberOfCancelledAttempt", default: () => "0" })
   numberOfCancelledAttempt: string;
 
-  @ManyToOne(() => Gender, (gender) => gender.clients)
+  @ManyToOne(() => Gender, (gender) => gender.customers)
   @JoinColumn([{ name: "GenderId", referencedColumnName: "genderId" }])
   gender: Gender;
 
-  @ManyToOne(() => Users, (users) => users.clients)
+  @ManyToOne(() => Users, (users) => users.customers)
   @JoinColumn([{ name: "UserId", referencedColumnName: "userId" }])
   user: Users;
 
-  @OneToMany(() => Notifications, (notifications) => notifications.client)
+  @OneToMany(() => Notifications, (notifications) => notifications.customer)
   notifications: Notifications[];
 
-  @OneToMany(() => Reservation, (reservation) => reservation.client)
+  @OneToMany(() => Reservation, (reservation) => reservation.customer)
   reservations: Reservation[];
 }

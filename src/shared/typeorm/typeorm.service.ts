@@ -2,7 +2,6 @@ import { EntityStatus } from "../entities/EntityStatus";
 import { UserType } from "../entities/UserType";
 import { Gender } from "../entities/Gender";
 import { Staff } from "../entities/Staff";
-import { Clients } from "../entities/Clients";
 import { Users } from "../entities/Users";
 import { Injectable, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -15,8 +14,11 @@ import { Reminder } from "../entities/Reminder";
 import { Files } from "../entities/Files";
 import { UserProfilePic } from "../entities/UserProfilePic";
 import { Reservation } from "../entities/Reservation";
-import { ReservationType } from "../entities/ReservationType";
 import { ReservationStatus } from "../entities/ReservationStatus";
+import { Customers } from "../entities/Customers";
+import { ReservationLevel } from "../entities/ReservationLevel";
+import { OrderItem } from "../entities/OrderItem";
+import { OrderItemType } from "../entities/OrderItemType";
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -35,7 +37,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       entities: [
         Users,
         Roles,
-        Clients,
+        Customers,
         Staff,
         Gender,
         UserType,
@@ -47,8 +49,10 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         Files,
         UserProfilePic,
         Reservation,
-        ReservationType,
         ReservationStatus,
+        ReservationLevel,
+        OrderItem,
+        OrderItemType,
       ],
       synchronize: false,// never use TRUE in production!
       ssl: ssl.toLocaleLowerCase().includes("true"),

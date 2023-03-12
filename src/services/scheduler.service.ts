@@ -9,7 +9,7 @@ import {
   NotificationDescriptionConstant,
 } from "src/common/constant/notifications.constant";
 import { FirebaseProvider } from "src/core/provider/firebase/firebase-provider";
-import { Clients } from "src/shared/entities/Clients";
+import { Customers } from "src/shared/entities/Customers";
 import { Notifications } from "src/shared/entities/Notifications";
 import { NotificationService } from "./notification.service";
 import { ReminderService } from "./reminder.service";

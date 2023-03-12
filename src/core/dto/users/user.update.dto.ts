@@ -60,7 +60,7 @@ export class UpdateStaffUserDto extends UserDto {
   userProfilePic: any;
 }
 
-export class UpdateClientUserDto extends UserDto {
+export class UpdateCustomerUserDto extends UserDto {
   @ApiProperty()
   @IsNotEmpty()
   firstName: string;
@@ -113,7 +113,7 @@ export class UpdateFirebaseToken extends UserDto {
   firebaseToken: string;
 }
 
-export class UpdateClientProfilePictureDto extends UserDto {
+export class UpdateCustomerProfilePictureDto extends UserDto {
   @ApiProperty()
   @IsOptional()
   userProfilePic: any;

@@ -4,11 +4,15 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Clients } from "./Clients";
+import { Notifications } from "./Notifications";
+import { OrderItem } from "./OrderItem";
+import { Customers } from "./Customers";
+import { ReservationLevel } from "./ReservationLevel";
 import { ReservationStatus } from "./ReservationStatus";
-import { ReservationType } from "./ReservationType";
+import { Staff } from "./Staff";
 
 @Index("pk_reservation_1890105774", ["reservationId"], { unique: true })
 @Entity("Reservation", { schema: "dbo" })
@@ -16,24 +20,43 @@ export class Reservation {
   @PrimaryGeneratedColumn({ type: "bigint", name: "ReservationId" })
   reservationId: string;
 
-  @Column("date", { name: "ReservationDate" })
-  reservationDate: string;
+  @Column("date", { name: "ReqCompletionDate" })
+  reqCompletionDate: string;
 
-  @Column("character varying", { name: "Time", length: 50 })
-  time: string;
+  @Column("date", { name: "EstCompletionDate", nullable: true })
+  estCompletionDate: string | null;
 
-  @Column("text", { name: "Remarks", nullable: true })
-  remarks: string | null;
+  @Column("character varying", { name: "Description" })
+  description: string;
 
-  @Column("text", { name: "AdminRemarks", nullable: true })
+  @Column("boolean", {
+    name: "IsCancelledByAdmin",
+    nullable: true,
+    default: () => "false",
+  })
+  isCancelledByAdmin: boolean | null;
+
+  @Column("character varying", { name: "AdminRemarks", nullable: true })
   adminRemarks: string | null;
 
-  @Column("boolean", { name: "IsCancelledByAdmin", default: () => "false" })
-  isCancelledByAdmin: boolean;
+  @OneToMany(() => Notifications, (notifications) => notifications.reservation)
+  notifications: Notifications[];
 
-  @ManyToOne(() => Clients, (clients) => clients.reservations)
-  @JoinColumn([{ name: "ClientId", referencedColumnName: "clientId" }])
-  client: Clients;
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.reservation)
+  orderItems: OrderItem[];
+
+  @ManyToOne(() => Customers, (customers) => customers.reservations)
+  @JoinColumn([{ name: "CustomerId", referencedColumnName: "customerId" }])
+  customer: Customers;
+
+  @ManyToOne(
+    () => ReservationLevel,
+    (reservationLevel) => reservationLevel.reservations
+  )
+  @JoinColumn([
+    { name: "ReservationLevelId", referencedColumnName: "reservationLevelId" },
+  ])
+  reservationLevel: ReservationLevel;
 
   @ManyToOne(
     () => ReservationStatus,
@@ -47,12 +70,7 @@ export class Reservation {
   ])
   reservationStatus: ReservationStatus;
 
-  @ManyToOne(
-    () => ReservationType,
-    (reservationType) => reservationType.reservations
-  )
-  @JoinColumn([
-    { name: "ReservationTypeId", referencedColumnName: "reservationTypeId" },
-  ])
-  reservationType: ReservationType;
+  @ManyToOne(() => Staff, (staff) => staff.reservations)
+  @JoinColumn([{ name: "StaffId", referencedColumnName: "staffId" }])
+  staff: Staff;
 }

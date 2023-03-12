@@ -22,8 +22,8 @@ import { NotificationsDto } from "src/core/dto/notification/notification.dtos";
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-  @Get("getAllByClientIdPage")
-  @ApiQuery({ name: "clientId", required: false })
+  @Get("getAllByCustomerIdPage")
+  @ApiQuery({ name: "customerId", required: false })
   @ApiQuery({
     name: "page",
     description: "page",
@@ -37,8 +37,8 @@ export class NotificationController {
     type: Number,
   })
   @UseGuards(JwtAuthGuard)
-  async getAllByClientIdPage(
-    @Query("clientId") clientId: string = "",
+  async getAllByCustomerIdPage(
+    @Query("customerId") customerId: string = "",
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit = 10
   ) {
@@ -46,14 +46,14 @@ export class NotificationController {
     try {
       page = page <= 0 ? 1 : page;
       limit = limit > 40 ? 40 : limit;
-      // const result = await this.notificationService.getAllByClientIdPage(
-      //   clientId,
-      //   {
-      //     page,
-      //     limit,
-      //   }
-      // );
-      // res.data = result;
+      const result = await this.notificationService.getAllByCustomerIdPage(
+        customerId,
+        {
+          page,
+          limit,
+        }
+      );
+      res.data = result;
       res.success = true;
       return res;
     } catch (e) {
@@ -63,15 +63,15 @@ export class NotificationController {
     }
   }
 
-  @Get("getTotalUnreadByClientId")
-  @ApiQuery({ name: "clientId", required: false })
+  @Get("getTotalUnreadByCustomerId")
+  @ApiQuery({ name: "customerId", required: false })
   @UseGuards(JwtAuthGuard)
-  async getTotalUnreadByClientId(@Query("clientId") clientId: string = "") {
+  async getTotalUnreadByCustomerId(@Query("customerId") customerId: string = "") {
     const res: CustomResponse = {};
     try {
-      // res.data = await this.notificationService.getTotalUnreadByClientId(
-      //   clientId
-      // );
+      res.data = await this.notificationService.getTotalUnreadByCustomerId(
+        customerId
+      );
       res.success = true;
       return res;
     } catch (e) {
@@ -87,7 +87,7 @@ export class NotificationController {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};
-      // res.data = await this.notificationService.updateReadStatus(dto);
+      res.data = await this.notificationService.updateReadStatus(dto);
       res.success = true;
       return res;
     } catch (e) {

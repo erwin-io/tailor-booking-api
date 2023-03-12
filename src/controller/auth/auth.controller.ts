@@ -1,6 +1,6 @@
 import { UserDto } from "../../core/dto/users/user.update.dto";
 import {
-  ClientUserDto,
+  CustomerUserDto,
   StaffUserDto,
 } from "../../core/dto/users/user.create.dto";
 import { LocalAuthGuard } from "../../core/auth/local.auth.guard";
@@ -27,11 +27,11 @@ import { RefreshTokenDto } from "../../core/dto/auth/refresh-token.dto";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post("register/client")
-  public async registerClient(@Body() createUserDto: ClientUserDto) {
+  @Post("register/customer")
+  public async registerCustomer(@Body() createUserDto: CustomerUserDto) {
     const res: CustomResponse = {};
     try {
-      res.data = await this.authService.registerClient(createUserDto);
+      res.data = await this.authService.registerCustomer(createUserDto);
       res.success = true;
       return res;
     } catch (e) {
@@ -70,11 +70,11 @@ export class AuthController {
   }
 
   @UseGuards(LocalAuthGuard)
-  @Post("login/client")
-  public async loginClient(@Body() loginUserDto: LoginUserDto) {
+  @Post("login/customer")
+  public async loginCustomer(@Body() loginUserDto: LoginUserDto) {
     const res: CustomResponse = {};
     try {
-      res.data = await this.authService.loginClient(loginUserDto);
+      res.data = await this.authService.loginCustomer(loginUserDto);
       res.success = true;
       return res;
     } catch (e) {

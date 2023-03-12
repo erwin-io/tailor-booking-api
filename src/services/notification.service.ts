@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Notifications } from "src/shared/entities/Notifications";
 import { Repository } from "typeorm";
 import { IPaginationOptions, paginate } from "nestjs-typeorm-paginate";
-import { Clients } from "src/shared/entities/Clients";
+import { Customers } from "src/shared/entities/Customers";
 import { EntityStatus } from "src/shared/entities/EntityStatus";
 
 @Injectable()
@@ -12,24 +12,25 @@ export class NotificationService {
     @InjectRepository(Notifications)
     private readonly notificationsRepo: Repository<Notifications>
   ) {}
-  // async getAllByClientIdPage(clientId: string, options: IPaginationOptions) {
-  //   const queryBuilder = this.notificationsRepo.manager
-  //     .createQueryBuilder()
-  //     .select("n")
-  //     .from(Notifications, "n")
-  //     .leftJoinAndSelect("n.appointment", "a")
-  //     .leftJoinAndSelect("a.appointmentStatus", "as")
-  //     .leftJoinAndSelect("n.client", "c")
-  //     .where("n.clientId= :clientId", { clientId });
-  //   queryBuilder.orderBy("n.notificationId", "DESC"); // Or whatever you need to do
+  async getAllByCustomerIdPage(customerId: string, options: IPaginationOptions) {
+    const queryBuilder = this.notificationsRepo.manager
+      .createQueryBuilder()
+      .select("n")
+      .from(Notifications, "n")
+      .leftJoinAndSelect("n.reservation", "r")
+      .leftJoinAndSelect("r.reservationStatus", "rs")
+      .leftJoinAndSelect("r.reservationLevel", "rl")
+      .leftJoinAndSelect("n.customer", "c")
+      .where("c.customerId= :customerId", { customerId });
+    queryBuilder.orderBy("n.notificationId", "DESC"); // Or whatever you need to do
 
-  //   return paginate<Notifications>(queryBuilder, options);
-  // }
+    return paginate<Notifications>(queryBuilder, options);
+  }
 
   // async addAppointmentNotification(
   //   dto: {
   //     appointment: Appointment;
-  //     client: Clients;
+  //     customer: Customers;
   //     date: Date;
   //     title: string;
   //     description: string;
@@ -40,7 +41,7 @@ export class NotificationService {
   //       const notifications = dto.map((x) => {
   //         const notification = new Notifications();
   //         notification.appointment = x.appointment;
-  //         notification.client = x.client;
+  //         notification.customer = x.customer;
   //         notification.date = x.date;
   //         notification.title = x.title;
   //         notification.description = x.description;
@@ -66,7 +67,7 @@ export class NotificationService {
   //   try {
   //     return await this.notificationsRepo.manager.transaction(
   //       async (entityManager) => {
-  //         const clients = await entityManager.find(Clients, {
+  //         const customers = await entityManager.find(Customers, {
   //           where: {
   //             user: {
   //               entityStatus: { entityStatusId: "1" },
@@ -75,9 +76,9 @@ export class NotificationService {
   //           },
   //           relations: ["user"],
   //         });
-  //         const notifications = clients.map((x) => {
+  //         const notifications = customers.map((x) => {
   //           const notification = new Notifications();
-  //           notification.client = x;
+  //           notification.customer = x;
   //           notification.date = dto.date;
   //           notification.title = dto.title;
   //           notification.description = dto.description;
@@ -99,52 +100,52 @@ export class NotificationService {
   //   }
   // }
 
-  // async updateReadStatus(dto) {
-  //   try {
-  //     return await this.notificationsRepo.manager.transaction(
-  //       async (entityManager) => {
-  //         const notification = await entityManager.findOne(Notifications, {
-  //           where: { notificationId: dto.notificationId },
-  //           relations: ["client"],
-  //         });
-  //         if (!notification) {
-  //           throw new HttpException(
-  //             "Notification not found",
-  //             HttpStatus.NOT_FOUND
-  //           );
-  //         }
-  //         notification.isRead = true;
-  //         await entityManager.save(notification);
+  async updateReadStatus(dto) {
+    try {
+      return await this.notificationsRepo.manager.transaction(
+        async (entityManager) => {
+          const notification = await entityManager.findOne(Notifications, {
+            where: { notificationId: dto.notificationId },
+            relations: ["customer"],
+          });
+          if (!notification) {
+            throw new HttpException(
+              "Notification not found",
+              HttpStatus.NOT_FOUND
+            );
+          }
+          notification.isRead = true;
+          await entityManager.save(notification);
 
-  //         const isRead = false;
-  //         const queryBuilder = entityManager
-  //           .createQueryBuilder()
-  //           .select("n")
-  //           .from(Notifications, "n")
-  //           .leftJoinAndSelect("n.appointment", "a")
-  //           .leftJoinAndSelect("n.client", "c")
-  //           .where("n.clientId = :clientId", {
-  //             clientId: notification.client.clientId,
-  //           })
-  //           .andWhere("n.isRead = :isRead", { isRead });
-  //         return { total: await queryBuilder.getCount() };
-  //       }
-  //     );
-  //   } catch (e) {
-  //     throw e;
-  //   }
-  // }
+          const isRead = false;
+          const queryBuilder = entityManager
+            .createQueryBuilder()
+            .select("n")
+            .from(Notifications, "n")
+            .leftJoinAndSelect("n.reservation", "r")
+            .leftJoinAndSelect("n.customer", "c")
+            .where("c.customerId = :customerId", {
+              customerId: notification.customer.customerId,
+            })
+            .andWhere("n.isRead = :isRead", { isRead });
+          return { total: await queryBuilder.getCount() };
+        }
+      );
+    } catch (e) {
+      throw e;
+    }
+  }
 
-  // async getTotalUnreadByClientId(clientId: string) {
-  //   const isRead = false;
-  //   const queryBuilder = this.notificationsRepo.manager
-  //     .createQueryBuilder()
-  //     .select("n")
-  //     .from(Notifications, "n")
-  //     .leftJoinAndSelect("n.appointment", "a")
-  //     .leftJoinAndSelect("n.client", "c")
-  //     .where("n.clientId = :clientId", { clientId })
-  //     .andWhere("n.isRead = :isRead", { isRead });
-  //   return { total: await queryBuilder.getCount() };
-  // }
+  async getTotalUnreadByCustomerId(customerId: string) {
+    const isRead = false;
+    const queryBuilder = this.notificationsRepo.manager
+      .createQueryBuilder()
+      .select("n")
+      .from(Notifications, "n")
+      .leftJoinAndSelect("n.reservation", "r")
+      .leftJoinAndSelect("n.customer", "c")
+      .where("c.customerId = :customerId", { customerId })
+      .andWhere("n.isRead = :isRead", { isRead });
+    return { total: await queryBuilder.getCount() };
+  }
 }

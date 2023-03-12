@@ -6,8 +6,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Clients } from "./Clients";
+import { Customers } from "./Customers";
 import { EntityStatus } from "./EntityStatus";
+import { Reservation } from "./Reservation";
 
 @Index("pk_notifications_1061578820", ["notificationId"], { unique: true })
 @Entity("Notifications", { schema: "dbo" })
@@ -15,28 +16,31 @@ export class Notifications {
   @PrimaryGeneratedColumn({ type: "bigint", name: "NotificationId" })
   notificationId: string;
 
-  @Column("timestamp without time zone", { name: "Date" })
-  date: Date;
+  @Column("date", { name: "Date" })
+  date: string;
 
-  @Column("text", { name: "Title" })
+  @Column("character varying", { name: "Title" })
   title: string;
 
-  @Column("text", { name: "Description" })
+  @Column("character varying", { name: "Description" })
   description: string;
 
-  @Column("boolean", { name: "IsReminder", default: () => "false" })
-  isReminder: boolean;
+  @Column("boolean", { name: "IsRead", nullable: true, default: () => "false" })
+  isRead: boolean | null;
 
-  @Column("boolean", { name: "IsRead", default: () => "false" })
-  isRead: boolean;
-
-  @ManyToOne(() => Clients, (clients) => clients.notifications)
-  @JoinColumn([{ name: "ClientId", referencedColumnName: "clientId" }])
-  client: Clients;
+  @ManyToOne(() => Customers, (customers) => customers.notifications)
+  @JoinColumn([{ name: "CustomerId", referencedColumnName: "customerId" }])
+  customer: Customers;
 
   @ManyToOne(() => EntityStatus, (entityStatus) => entityStatus.notifications)
   @JoinColumn([
     { name: "EntityStatusId", referencedColumnName: "entityStatusId" },
   ])
   entityStatus: EntityStatus;
+
+  @ManyToOne(() => Reservation, (reservation) => reservation.notifications)
+  @JoinColumn([
+    { name: "ReservationId", referencedColumnName: "reservationId" },
+  ])
+  reservation: Reservation;
 }

@@ -13,15 +13,15 @@ import {
 import { UsersService } from "../../services/users.service";
 import {
   ToggleEnableDto,
-  UpdateClientProfilePictureDto,
-  UpdateClientUserDto,
+  UpdateCustomerProfilePictureDto,
+  UpdateCustomerUserDto,
   UpdateFirebaseToken,
   UpdatePasswordDto,
   UpdateStaffUserDto,
 } from "../../core/dto/users/user.update.dto";
 import { CustomResponse } from "./../../common/helper/customresponse.helpers";
 import {
-  ClientUserDto,
+  CustomerUserDto,
   CreateStaffUserDto,
 } from "../../core/dto/users/user.create.dto";
 import {
@@ -113,7 +113,7 @@ export class UsersController {
     }
   }
 
-  @Get("getClientByAdvanceSearch")
+  @Get("getCustomerByAdvanceSearch")
   @ApiQuery({ name: "isAdvance", required: false })
   @ApiQuery({ name: "keyword", required: false })
   @ApiQuery({ name: "userId", required: false })
@@ -122,7 +122,7 @@ export class UsersController {
   @ApiQuery({ name: "mobileNumber", required: false })
   @ApiQuery({ name: "name", required: false })
   @UseGuards(JwtAuthGuard)
-  async getClientByAdvanceSearch(
+  async getCustomerByAdvanceSearch(
     @Query("isAdvance") isAdvance: boolean,
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
     @Query("keyword") keyword: string = "",
@@ -139,7 +139,7 @@ export class UsersController {
   ) {
     const res: CustomResponse = {};
     try {
-      res.data = await this.userService.findClientUserByFilter(
+      res.data = await this.userService.findCustomerUserByFilter(
         isAdvance,
         keyword,
         userId,
@@ -172,12 +172,12 @@ export class UsersController {
     }
   }
 
-  @Post("/client")
+  @Post("/customer")
   @UseGuards(JwtAuthGuard)
-  async createClient(@Body() clientUserDto: ClientUserDto) {
+  async createCustomer(@Body() customerUserDto: CustomerUserDto) {
     const res: CustomResponse = {};
     try {
-      res.data = await this.userService.createClientUser(clientUserDto);
+      res.data = await this.userService.createCustomerUser(customerUserDto);
       res.success = true;
       return res;
     } catch (e) {
@@ -202,13 +202,13 @@ export class UsersController {
     }
   }
 
-  @Put("/client")
+  @Put("/customer")
   @UseGuards(JwtAuthGuard)
-  async updateClientUser(@Body() clientUserDto: UpdateClientUserDto) {
+  async updateCustomerUser(@Body() customerUserDto: UpdateCustomerUserDto) {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};
-      res.data = await this.userService.updateClientUser(clientUserDto);
+      res.data = await this.userService.updateCustomerUser(customerUserDto);
       res.success = true;
       return res;
     } catch (e) {
@@ -218,13 +218,13 @@ export class UsersController {
     }
   }
 
-  @Put("/clientProfilePicture")
+  @Put("/customerProfilePicture")
   @UseGuards(JwtAuthGuard)
-  async updateClientProfilePicture(@Body() dto: UpdateClientProfilePictureDto) {
+  async updateCustomerProfilePicture(@Body() dto: UpdateCustomerProfilePictureDto) {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};
-      res.data = await this.userService.updateClientProfilePicture(dto);
+      res.data = await this.userService.updateCustomerProfilePicture(dto);
       res.success = true;
       return res;
     } catch (e) {

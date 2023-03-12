@@ -1,5 +1,7 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
 import { Notifications } from "./Notifications";
+import { OrderItem } from "./OrderItem";
+import { OrderItemType } from "./OrderItemType";
 import { Reminder } from "./Reminder";
 import { Users } from "./Users";
 
@@ -14,6 +16,12 @@ export class EntityStatus {
 
   @OneToMany(() => Notifications, (notifications) => notifications.entityStatus)
   notifications: Notifications[];
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.entityStatus)
+  orderItems: OrderItem[];
+
+  @OneToMany(() => OrderItemType, (orderItemType) => orderItemType.entityStatus)
+  orderItemTypes: OrderItemType[];
 
   @OneToMany(() => Reminder, (reminder) => reminder.entityStatus)
   reminders: Reminder[];

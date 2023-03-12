@@ -1,6 +1,8 @@
 export enum ReservationStatusEnum {
   PENDING = 1,
   APPROVED = 2,
-  COMPLETED = 3,
-  CANCELLED = 4
+  PROCESSED = 3,
+  COMPLETED = 4,
+  DECLINED = 5,
+  CANCELLED = 6,
 }

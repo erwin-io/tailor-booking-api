@@ -12,6 +12,10 @@ import { DashboardModule } from "./controller/dashboard/dashboard.module";
 import { FirebaseProviderModule } from "./core/provider/firebase/firebase-provider.module";
 import * as Joi from "@hapi/joi";
 import { ReservationModule } from "./controller/reservation/reservation.module";
+import { OrderItemTypeService } from './services/order-item-type.service';
+import { OrderItemTypeModule } from './controller/order-item-type/order-item-type.module';
+import { OrderItemModule } from './controller/order-item/order-item.module';
+import { OrderItemService } from './services/order-item.service';
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 @Module({
   imports: [
@@ -31,6 +35,8 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     DashboardModule,
     FirebaseProviderModule,
     ReservationModule,
+    OrderItemTypeModule,
+    OrderItemModule,
   ],
   providers: [AppService],
   controllers: [],

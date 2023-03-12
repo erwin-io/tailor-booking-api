@@ -4,8 +4,10 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Reservation } from "./Reservation";
 import { Gender } from "./Gender";
 import { Users } from "./Users";
 
@@ -23,6 +25,9 @@ export class Staff {
 
   @Column("character varying", { name: "MobileNumber", length: 250 })
   mobileNumber: string;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.staff)
+  reservations: Reservation[];
 
   @ManyToOne(() => Gender, (gender) => gender.staff)
   @JoinColumn([{ name: "GenderId", referencedColumnName: "genderId" }])
