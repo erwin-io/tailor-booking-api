@@ -1,4 +1,4 @@
-import * as firebaseConfig from "./church-info-sys-firebase-adminsdk-v23uh-58afdd570b.json";
+import * as firebaseConfig from "./tailor-booking-app-firebase-adminsdk-m7323-e75f6eb201.json";
 
 export default {
   type: firebaseConfig.type,
