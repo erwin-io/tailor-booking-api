@@ -58,9 +58,8 @@ export class ReservationController {
   @ApiQuery({ name: "keyword", required: false })
   @ApiQuery({ name: "customerName", required: false })
   @ApiQuery({ name: "reservationStatus", required: false })
-  @ApiQuery({ name: "category", required: false })
-  @ApiQuery({ name: "reservationDateFrom", type: Date, required: false })
-  @ApiQuery({ name: "reservationDateTo", required: false })
+  @ApiQuery({ name: "reqCompletionDateFrom", type: Date, required: false })
+  @ApiQuery({ name: "reqCompletionDateTo", type: Date, required: false })
   @UseGuards(JwtAuthGuard)
   async getByAdvanceSearch(
     @Query("isAdvance") isAdvance: boolean,
@@ -72,8 +71,8 @@ export class ReservationController {
     @Query("reservationStatus")
     reservationStatus: string = "",
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-    @Query("reservationDateFrom") reservationDateFrom: Date,
-    @Query("reservationDateTo") reservationDateTo: Date
+    @Query("reqCompletionDateFrom") reqCompletionDateFrom: Date = new Date(),
+    @Query("reqCompletionDateTo") reqCompletionDateTo: Date = new Date()
   ) {
     const res: CustomResponse = {};
     try {
@@ -82,8 +81,8 @@ export class ReservationController {
         keyword,
         customerName,
         reservationStatus.trim() === "" ? [] : reservationStatus.split(","),
-        reservationDateFrom,
-        reservationDateTo
+        reqCompletionDateFrom,
+        reqCompletionDateTo
       );
       res.success = true;
       return res;

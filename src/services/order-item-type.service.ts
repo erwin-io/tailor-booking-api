@@ -15,6 +15,9 @@ export class OrderItemTypeService {
     async findAll() {
       try {
         return await this.orderItemTypeRepo.find({
+          where: {
+            entityStatus: { entityStatusId: EntityStatusEnum.ACTIVE.toString() }
+          },
           relations: {
             entityStatus: true
           }

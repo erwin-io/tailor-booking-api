@@ -14,7 +14,7 @@ export class OrderItemTypeController {
       private readonly orderItemTypeService: OrderItemTypeService
     ) {}
   
-    @Get("getAll")
+    @Get("")
     @UseGuards(JwtAuthGuard)
     async getAll() {
       const res: CustomResponse = {};

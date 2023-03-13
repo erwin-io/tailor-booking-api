@@ -22,7 +22,7 @@ export class UpdateReservationStatusDto extends ReservationDto {
 export class ProcessOrderDto extends ReservationDto {
   @ApiProperty()
   @IsNotEmpty()
-  staffId: string;
+  assignedStaffId: string;
   
   @ApiProperty({
     type: Date,

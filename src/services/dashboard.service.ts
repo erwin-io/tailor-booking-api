@@ -164,23 +164,42 @@ export class DashboardService {
         .leftJoinAndSelect("r.reservationStatus", "rs")
         .leftJoinAndSelect("r.reservationLevel", "rl")
         .leftJoinAndSelect("r.customer", "c")
+        .leftJoinAndSelect("r.staff", "s")
         .where(
           "rs.reservationStatusId = :reservationStatusId AND " + 
           "c.customerId = :customerId"
-        )
-        .setParameters({
-          customerId,
-          reservationStatusId: ReservationStatusEnum.APPROVED
-        });
+        );
         return await forkJoin([
           query
           .orderBy("r.reservationId", "ASC")
+          .setParameters({
+            customerId,
+            reservationStatusId: ReservationStatusEnum.APPROVED
+          })
           .getOne(),
-          query.getCount(),
+          query
+          .orderBy("r.reservationId", "ASC")
+          .setParameters({
+            customerId,
+            reservationStatusId: ReservationStatusEnum.PROCESSED
+          })
+          .getOne(),
+          query
+          .setParameters({
+            customerId,
+            reservationStatusId: ReservationStatusEnum.APPROVED
+          }).getCount(),
+          query
+          .setParameters({
+            customerId,
+            reservationStatusId: ReservationStatusEnum.PROCESSED
+          }).getCount(),
         ]).toPromise().then((data: any[]) => {
           return {
             approved: data[0],
-            total: data[1],
+            processed: data[1],
+            totalApproved: data[2],
+            totalProcessed: data[3],
           }
         });
     } catch (e) {

@@ -45,7 +45,7 @@ export class ReservationService {
     try {
       const params: any = {
         keyword: `%${keyword}%`,
-        customerName: `%${customerName}%`,
+        customerName: `%${customerName.toLowerCase()}%`,
         status:
           status.length === 0
             ? ["Pending",
@@ -57,7 +57,20 @@ export class ReservationService {
             : status,
             entityStatusId: EntityStatusEnum.ACTIVE.toString()
       };
-
+      if (
+        (!(reqCompletionDateFrom instanceof Date) ||
+        reqCompletionDateFrom.toDateString().includes("Invalid Date"))
+      ) {
+        reqCompletionDateFrom = new Date(new Date().setHours(0,0,0,0))
+      }
+      if (
+        (!(reqCompletionDateTo instanceof Date) ||
+        reqCompletionDateTo.toDateString().includes("Invalid Date"))
+      ) {
+        reqCompletionDateTo = new Date(new Date().setHours(0,0,0,0))
+      }
+      params.reqCompletionDateFrom = moment(reqCompletionDateFrom).format("YYYY-MM-DD");
+      params.reqCompletionDateTo = moment(reqCompletionDateTo).format("YYYY-MM-DD");
       params.status = params.status.map(x=>x.toString().toLowerCase())
       let query = this.reservationRepo.manager
         .createQueryBuilder("Reservation", "r")
@@ -68,36 +81,21 @@ export class ReservationService {
         .leftJoinAndSelect("r.reservationLevel", "rl")
         .leftJoinAndSelect("r.customer", "c");
       if (advanceSearch) {
-        if (
-          reqCompletionDateFrom instanceof Date &&
-          reqCompletionDateFrom.toDateString() !== "Invalid Date" &&
-          reqCompletionDateTo instanceof Date &&
-          reqCompletionDateTo.toDateString() !== "Invalid Date"
-        ) {
-          query = query
-            .where(
-              "r.reqCompletionDate >= :reqCompletionDateFrom and r.reqCompletionDate <= :reqCompletionDateTo"
-            )
-            .andWhere("LOWER(rs.name) IN(:...status)");
-          params.reqCompletionDateFrom =
-            moment(reqCompletionDateFrom).format("YYYY-MM-DD");
-          params.reqCompletionDateTo =
-            moment(reqCompletionDateTo).format("YYYY-MM-DD");
-        }
-        query.andWhere(
-          "CONCAT(c.firstName, ' ', c.middleName, ' ', c.lastName) LIKE :customerName"
-        ).andWhere("eoi.entityStatusId = :entityStatusId");
-
         query = query
+          .where(
+            "LOWER(rs.name) IN(:...status) AND " + 
+            "CONCAT(LOWER(c.firstName), ' ', LOWER(c.lastName)) LIKE :customerName AND " + 
+            "eoi.entityStatusId = :entityStatusId "
+            )
           .orderBy("rs.reservationStatusId", "ASC")
-          .addOrderBy("r.reservationDate", "ASC");
+          .addOrderBy("r.reservationId", "ASC");
       } else {
         query = query
-          .where("cast(r.reservationId as character varying) like :keyword")
-          .orWhere("cast(r.reqCompletionDate as character varying) like :keyword")
-          .orWhere("rl.name like :keyword")
+          .where("LOWER(cast(r.reservationId as character varying)) like :keyword")
+          .orWhere("LOWER(cast(r.reqCompletionDate as character varying)) like :keyword")
+          .orWhere("LOWER(rl.name) like :keyword")
           .andWhere(
-            "CONCAT(c.firstName, ' ', c.middleName, ' ', c.lastName) LIKE :keyword"
+            "CONCAT(LOWER(c.firstName), ' ', LOWER(c.lastName)) LIKE :keyword"
           )
           .orderBy("rs.reservationStatusId", "ASC")
           .addOrderBy("r.reservationId", "ASC");
@@ -164,6 +162,9 @@ export class ReservationService {
         .leftJoinAndSelect("r.reservationStatus", "rs")
         .leftJoinAndSelect("r.reservationLevel", "rl")
         .leftJoinAndSelect("r.customer", "c")
+        .leftJoinAndSelect("c.user", "cu")
+        .leftJoinAndSelect("r.staff", "s")
+        .leftJoinAndSelect("s.user", "su")
           .where(options)
           .andWhere("eoi.entityStatusId = :entityStatusId", { entityStatusId : EntityStatusEnum.ACTIVE.toString() })
           .getOne()
@@ -260,14 +261,14 @@ export class ReservationService {
               customer: true
             },
           });
+          if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
+            throw new HttpException(
+              "Not allowed to processed!",
+              HttpStatus.BAD_REQUEST
+            );
+          }
           //pending validation
           if (reservation.reservationStatus.reservationStatusId ===ReservationStatusEnum.PENDING.toString()) {
-            if (reservationStatusId === ReservationStatusEnum.PROCESSED.toString()) {
-              throw new HttpException(
-                "Unable to change status, reservation is not yet approved",
-                HttpStatus.BAD_REQUEST
-              );
-            }
             if (reservationStatusId === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is not yet processed",
@@ -346,12 +347,6 @@ export class ReservationService {
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.PROCESSED.toString()) {
-              throw new HttpException(
-                "Unable to change status, reservation is already completed",
-                HttpStatus.BAD_REQUEST
-              );
-            }
             if (reservationStatusId === ReservationStatusEnum.DECLINED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already completed",
@@ -375,12 +370,6 @@ export class ReservationService {
               );
             }
             if (reservationStatusId === ReservationStatusEnum.APPROVED.toString()) {
-              throw new HttpException(
-                "Unable to change status, reservation is already declined",
-                HttpStatus.BAD_REQUEST
-              );
-            }
-            if (reservationStatusId === ReservationStatusEnum.PROCESSED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already declined",
                 HttpStatus.BAD_REQUEST
@@ -414,12 +403,6 @@ export class ReservationService {
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.PROCESSED.toString()) {
-              throw new HttpException(
-                "Unable to change status, reservation is already cancelled",
-                HttpStatus.BAD_REQUEST
-              );
-            }
             if (reservationStatusId === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already cancelled",
@@ -448,7 +431,6 @@ export class ReservationService {
           );
           if(reservationStatusId === ReservationStatusEnum.APPROVED.toString() || 
           reservationStatusId === ReservationStatusEnum.DECLINED.toString() || 
-          reservationStatusId === ReservationStatusEnum.PROCESSED.toString() || 
           reservationStatusId === ReservationStatusEnum.COMPLETED.toString())
           {
             let notif = new Notifications();
@@ -555,7 +537,7 @@ export class ReservationService {
   async processOrder(dto: ProcessOrderDto) {
     return await this.reservationRepo.manager.transaction(
       async (entityManager) => {
-        const { reservationId, staffId } = dto;
+        const { reservationId, assignedStaffId } = dto;
         const reservation = await entityManager.findOne(Reservation, {
           where: { reservationId },
           relations: {
@@ -567,7 +549,7 @@ export class ReservationService {
         reservation.staff = await entityManager.findOne(
           Staff,
           {
-            where: { staffId },
+            where: { staffId: assignedStaffId },
           }
         );
         reservation.reservationStatus = await entityManager.findOne(
@@ -612,7 +594,7 @@ export class ReservationService {
             notif.customer.user.firebaseToken &&
             notif.customer.user.firebaseToken !== ""
           ) {
-            return await this.firebaseProvoder.app
+            await this.firebaseProvoder.app
               .messaging()
               .sendToDevice(
                 notif.customer.user.firebaseToken,
@@ -631,7 +613,6 @@ export class ReservationService {
               )
               .then((response: MessagingDevicesResponse) => {
                 console.log("Successfully sent message:", response);
-                return reservation;
               })
               .catch((error) => {
                 throw new HttpException(
