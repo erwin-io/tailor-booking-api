@@ -430,101 +430,97 @@ export class ReservationService {
             }
           );
           reservation = await entityManager.save(Reservation, reservation);
-          if(reservationStatusId === ReservationStatusEnum.APPROVED.toString() || 
-          reservationStatusId === ReservationStatusEnum.DECLINED.toString() || 
-          reservationStatusId === ReservationStatusEnum.COMPLETED.toString())
-          {
-            let notif = new Notifications();
-            notif.reservation = reservation;
-            notif.customer = await entityManager.findOne(Customers, {
-              where: { customerId: reservation.customer.customerId },
-            });
-            notif.date = moment().format("YYYY-MM-DD");
-            if (
-              Number(dto.reservationStatusId) === ReservationStatusEnum.APPROVED
-            ) {
-              notif.title = NotificationTitleConstant.RESERVATION_APPROVED;
-              notif.description =
-                NotificationDescriptionConstant.RESERVATION_APPROVED.replace(
-                  "{0}",
-                  `${moment(reservation.reqCompletionDate).format(
-                    "MMM DD, YYYY"
-                  )}`
-                );
-            } else if (
-              Number(dto.reservationStatusId) ===
-              ReservationStatusEnum.COMPLETED
-            ) {
-              notif.title = NotificationTitleConstant.RESERVATION_COMPLETED;
-              notif.description =
-                NotificationDescriptionConstant.RESERVATION_COMPLETED.replace(
-                  "{0}",
-                  `${moment(reservation.reqCompletionDate).format(
-                    "MMM DD, YYYY"
-                  )}`
-                );
-            } else if (
-              Number(dto.reservationStatusId) ===
-              ReservationStatusEnum.DECLINED
-            ) {
-              notif.title = NotificationTitleConstant.RESERVATION_DECLINED;
-              notif.description =
-                NotificationDescriptionConstant.RESERVATION_DECLINED.replace(
-                  "{0}",
-                  `${moment(reservation.reqCompletionDate).format(
-                    "MMM DD, YYYY"
-                  )}`
-                );
-            }
-            notif = await entityManager.save(Notifications, notif);
-            if (!notif) {
-              throw new HttpException(
-                "Error adding notifications!",
-                HttpStatus.BAD_REQUEST
+          
+          let notif = new Notifications();
+          notif.reservation = reservation;
+          notif.customer = await entityManager.findOne(Customers, {
+            where: { customerId: reservation.customer.customerId },
+          });
+          notif.date = moment().format("YYYY-MM-DD");
+          if (
+            Number(dto.reservationStatusId) === ReservationStatusEnum.APPROVED
+          ) {
+            notif.title = NotificationTitleConstant.RESERVATION_APPROVED;
+            notif.description =
+              NotificationDescriptionConstant.RESERVATION_APPROVED.replace(
+                "{0}",
+                `${moment(reservation.reqCompletionDate).format(
+                  "MMM DD, YYYY"
+                )}`
               );
-            } else {
-              const notificationId = notif.notificationId;
-              notif = <Notifications>await entityManager
-                .createQueryBuilder("Notifications", "n")
-                .leftJoinAndSelect("n.customer", "c")
-                .leftJoinAndSelect("c.user", "u")
-                .leftJoinAndSelect("n.reservation", "r")
-                .where("n.notificationId = :notificationId", {
-                  notificationId,
-                })
-                .getOne();
-              if (
-                notif.customer.user.firebaseToken &&
-                notif.customer.user.firebaseToken !== ""
-              ) {
-                return await this.firebaseProvoder.app
-                  .messaging()
-                  .sendToDevice(
-                    notif.customer.user.firebaseToken,
-                    {
-                      notification: {
-                        title: notif.title,
-                        body: notif.description,
-                        sound: "notif_alert",
-                      },
+          } else if (
+            Number(dto.reservationStatusId) ===
+            ReservationStatusEnum.COMPLETED
+          ) {
+            notif.title = NotificationTitleConstant.RESERVATION_COMPLETED;
+            notif.description =
+              NotificationDescriptionConstant.RESERVATION_COMPLETED.replace(
+                "{0}",
+                `${moment(reservation.reqCompletionDate).format(
+                  "MMM DD, YYYY"
+                )}`
+              );
+          } else if (
+            Number(dto.reservationStatusId) ===
+            ReservationStatusEnum.DECLINED
+          ) {
+            notif.title = NotificationTitleConstant.RESERVATION_DECLINED;
+            notif.description =
+              NotificationDescriptionConstant.RESERVATION_DECLINED.replace(
+                "{0}",
+                `${moment(reservation.reqCompletionDate).format(
+                  "MMM DD, YYYY"
+                )}`
+              );
+          }
+          notif = await entityManager.save(Notifications, notif);
+          if (!notif) {
+            throw new HttpException(
+              "Error adding notifications!",
+              HttpStatus.BAD_REQUEST
+            );
+          } else {
+            const notificationId = notif.notificationId;
+            notif = <Notifications>await entityManager
+              .createQueryBuilder("Notifications", "n")
+              .leftJoinAndSelect("n.customer", "c")
+              .leftJoinAndSelect("c.user", "u")
+              .leftJoinAndSelect("n.reservation", "r")
+              .where("n.notificationId = :notificationId", {
+                notificationId,
+              })
+              .getOne();
+            if (
+              notif.customer.user.firebaseToken &&
+              notif.customer.user.firebaseToken !== ""
+            ) {
+              return await this.firebaseProvoder.app
+                .messaging()
+                .sendToDevice(
+                  notif.customer.user.firebaseToken,
+                  {
+                    notification: {
+                      title: notif.title,
+                      body: notif.description,
+                      sound: "notif_alert",
                     },
-                    {
-                      priority: "high",
-                      timeToLive: 60 * 24,
-                      android: { sound: "notif_alert" },
-                    }
-                  )
-                  .then((response: MessagingDevicesResponse) => {
-                    console.log("Successfully sent message:", response);
-                    return reservation;
-                  })
-                  .catch((error) => {
-                    throw new HttpException(
-                      `Error sending notif! ${error.message}`,
-                      HttpStatus.BAD_REQUEST
-                    );
-                  });
-              }
+                  },
+                  {
+                    priority: "high",
+                    timeToLive: 60 * 24,
+                    android: { sound: "notif_alert" },
+                  }
+                )
+                .then((response: MessagingDevicesResponse) => {
+                  console.log("Successfully sent message:", response);
+                  return reservation;
+                })
+                .catch((error) => {
+                  throw new HttpException(
+                    `Error sending notif! ${error.message}`,
+                    HttpStatus.BAD_REQUEST
+                  );
+                });
             }
           }
         }
