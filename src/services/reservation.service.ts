@@ -253,7 +253,7 @@ export class ReservationService {
       const { reservationId, reservationStatusId } = dto;
       return await this.reservationRepo.manager.transaction(
         async (entityManager) => {
-          const reservation = await entityManager.findOne(Reservation, {
+          let reservation = await entityManager.findOne(Reservation, {
             where: { reservationId },
             relations: {
               reservationLevel: true,
@@ -429,6 +429,7 @@ export class ReservationService {
               where: { reservationStatusId },
             }
           );
+          reservation = await entityManager.save(Reservation, reservation);
           if(reservationStatusId === ReservationStatusEnum.APPROVED.toString() || 
           reservationStatusId === ReservationStatusEnum.DECLINED.toString() || 
           reservationStatusId === ReservationStatusEnum.COMPLETED.toString())
@@ -526,7 +527,6 @@ export class ReservationService {
               }
             }
           }
-          return await entityManager.save(Reservation, reservation);
         }
       );
     } catch (e) {
@@ -538,7 +538,7 @@ export class ReservationService {
     return await this.reservationRepo.manager.transaction(
       async (entityManager) => {
         const { reservationId, assignedStaffId } = dto;
-        const reservation = await entityManager.findOne(Reservation, {
+        let reservation = await entityManager.findOne(Reservation, {
           where: { reservationId },
           relations: {
             reservationLevel: true,
@@ -559,6 +559,7 @@ export class ReservationService {
           }
         );
         reservation.estCompletionDate = moment(dto.estCompletionDate).format("YYYY-MM-DD");
+        reservation = await entityManager.save(Reservation, reservation);
         let notif = new Notifications();
         notif.reservation = reservation;
         notif.customer = await entityManager.findOne(Customers, {
@@ -613,6 +614,7 @@ export class ReservationService {
               )
               .then((response: MessagingDevicesResponse) => {
                 console.log("Successfully sent message:", response);
+                return reservation;
               })
               .catch((error) => {
                 throw new HttpException(
@@ -622,7 +624,6 @@ export class ReservationService {
               });
           }
         }
-        return await entityManager.save(Reservation, reservation);
     });
   }
 }
