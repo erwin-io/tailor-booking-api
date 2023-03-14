@@ -213,7 +213,7 @@ export class ReservationService {
             newOrderItem.orderItemType = await entityManager.findOne(OrderItemType, {
               where: { orderItemTypeId: o.orderItemTypeId },
             });
-            if(o.quantity <= 0) {
+            if(Number(o.quantity) <= 0) {
               throw new HttpException(
                 `Invalid quantity ${newOrderItem.orderItemType.name}!`,
                 HttpStatus.BAD_REQUEST

@@ -13,7 +13,7 @@ export class AddOrderItemDto {
 
     @ApiProperty()
     @IsNotEmpty()
-    reservationId: number;
+    reservationId: string;
     
     @ApiProperty()
     @IsNotEmpty()

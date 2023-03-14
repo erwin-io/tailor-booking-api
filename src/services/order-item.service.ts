@@ -96,7 +96,7 @@ export class OrderItemService {
               orderItemTypeId: orderItemTypeId
             }
           });
-          if(quantity <= 0) {
+          if((Number(quantity)) <= 0) {
             throw new HttpException(
               `Invalid quantity ${orderItem.orderItemType.name}!`,
               HttpStatus.BAD_REQUEST
