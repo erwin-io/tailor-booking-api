@@ -13,12 +13,11 @@ export class AddOrderItemDto {
 
     @ApiProperty()
     @IsNotEmpty()
-    reservationId: string;
+    reservationId: number;
     
     @ApiProperty()
     @IsNotEmpty()
-    @IsNumberString()
-    quantity: number = 1;
+    quantity: string = "1";
 }
 
 export class OrderItemDto extends AddOrderItemDto {

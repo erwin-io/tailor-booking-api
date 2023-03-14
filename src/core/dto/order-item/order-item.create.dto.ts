@@ -8,8 +8,7 @@ export class CreateOrderItemDto {
     
     @ApiProperty()
     @IsNotEmpty()
-    @IsNumberString()
-    quantity: number = 1;
+    quantity: string = "1";
     
     @ApiProperty()
     @IsNotEmpty()
