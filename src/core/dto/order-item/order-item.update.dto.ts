@@ -18,7 +18,7 @@ export class AddOrderItemDto {
     @ApiProperty()
     @IsNotEmpty()
     @IsNumberString()
-    quantity: string = "0";
+    quantity: number = 1;
 }
 
 export class OrderItemDto extends AddOrderItemDto {
