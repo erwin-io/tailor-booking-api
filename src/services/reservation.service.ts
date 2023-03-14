@@ -137,7 +137,7 @@ export class ReservationService {
         .leftJoinAndSelect("r.customer", "c")
         .where("c.customerId = :customerId")
         .andWhere("LOWER(rs.name) IN(:...status)")
-        .andWhere("eoi.entityStatusId = :entityStatusId")
+        // .andWhere("eoi.entityStatusId = :entityStatusId")
         .setParameters(params);
 
       return <ReservationViewModel[]>(await query.getMany()).map(
@@ -166,7 +166,7 @@ export class ReservationService {
         .leftJoinAndSelect("r.staff", "s")
         .leftJoinAndSelect("s.user", "su")
           .where(options)
-          .andWhere("eoi.entityStatusId = :entityStatusId", { entityStatusId : EntityStatusEnum.ACTIVE.toString() })
+          // .andWhere("eoi.entityStatusId = :entityStatusId", { entityStatusId : EntityStatusEnum.ACTIVE.toString() })
           .getOne()
       );
       return new ReservationViewModel(query);
@@ -437,9 +437,7 @@ export class ReservationService {
             where: { customerId: reservation.customer.customerId },
           });
           notif.date = moment().format("YYYY-MM-DD");
-          if (
-            Number(dto.reservationStatusId) === ReservationStatusEnum.APPROVED
-          ) {
+          if (Number(dto.reservationStatusId) === ReservationStatusEnum.APPROVED) {
             notif.title = NotificationTitleConstant.RESERVATION_APPROVED;
             notif.description =
               NotificationDescriptionConstant.RESERVATION_APPROVED.replace(
@@ -448,10 +446,7 @@ export class ReservationService {
                   "MMM DD, YYYY"
                 )}`
               );
-          } else if (
-            Number(dto.reservationStatusId) ===
-            ReservationStatusEnum.COMPLETED
-          ) {
+          } else if (Number(dto.reservationStatusId) === ReservationStatusEnum.COMPLETED) {
             notif.title = NotificationTitleConstant.RESERVATION_COMPLETED;
             notif.description =
               NotificationDescriptionConstant.RESERVATION_COMPLETED.replace(
@@ -460,10 +455,7 @@ export class ReservationService {
                   "MMM DD, YYYY"
                 )}`
               );
-          } else if (
-            Number(dto.reservationStatusId) ===
-            ReservationStatusEnum.DECLINED
-          ) {
+          } else if (Number(dto.reservationStatusId) === ReservationStatusEnum.DECLINED) {
             notif.title = NotificationTitleConstant.RESERVATION_DECLINED;
             notif.description =
               NotificationDescriptionConstant.RESERVATION_DECLINED.replace(
@@ -561,9 +553,9 @@ export class ReservationService {
         notif.customer = await entityManager.findOne(Customers, {
           where: { customerId: reservation.customer.customerId },
         });
-        notif.title = NotificationTitleConstant.RESERVATION_APPROVED;
+        notif.title = NotificationTitleConstant.RESERVATION_PROCESSED;
         notif.description =
-          NotificationDescriptionConstant.RESERVATION_APPROVED.replace(
+          NotificationDescriptionConstant.RESERVATION_PROCESSED.replace(
             "{0}",
             `${moment(reservation.reqCompletionDate).format(
               "MMM DD, YYYY"
