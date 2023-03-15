@@ -16,8 +16,8 @@ export class Notifications {
   @PrimaryGeneratedColumn({ type: "bigint", name: "NotificationId" })
   notificationId: string;
 
-  @Column("date", { name: "Date" })
-  date: string;
+  @Column("timestamp with time zone", { name: "Date" })
+  date: Date;
 
   @Column("character varying", { name: "Title" })
   title: string;

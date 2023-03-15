@@ -6,8 +6,8 @@ export const NotificationTitleConstant = {
 };
 export const NotificationDescriptionConstant = {
     RESERVATION_APPROVED:
-      "Your reservation required to finish on {0} was approved. You can now send your items!",
-    RESERVATION_PROCESSED: "Your reservation {0} is now being processed!",
-    RESERVATION_COMPLETED: "Your reservation {0} was successfully completed!",
-    RESERVATION_DECLINED: "Reservation {0} has been declined!",
+      "Your reservation #{0} was approved. You can now send your items!",
+    RESERVATION_PROCESSED: "Your reservation #{0} is now being processed!",
+    RESERVATION_COMPLETED: "Your reservation #{0} was successfully completed!",
+    RESERVATION_DECLINED: "Your reservation #{0} has been declined!",
 };

@@ -19,3 +19,12 @@ export function getEnvPath(dest: string): string {
 export function ToBoolean(): (target: any, key: string) => void {
   return Transform((value: any) => value.obj[value.key]);
 }
+
+
+export function formatId(value: any, args?: any): unknown {
+  let s = value+'';
+  while (s.length < args) {
+    s = '0' + s;
+  }
+  return s;
+}
