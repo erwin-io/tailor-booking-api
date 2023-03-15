@@ -558,9 +558,7 @@ export class ReservationService {
         notif.description =
           NotificationDescriptionConstant.RESERVATION_PROCESSED.replace(
             "{0}",
-            `${moment(reservation.reqCompletionDate).format(
-              "MMM DD, YYYY"
-            )}`
+            `${formatId(reservation.reservationId, 5)}`
           );
         notif.date = new Date();
         notif = await entityManager.save(Notifications, notif);
