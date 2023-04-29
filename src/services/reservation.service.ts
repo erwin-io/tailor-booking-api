@@ -163,6 +163,8 @@ export class ReservationService {
         await this.reservationRepo.manager
         .createQueryBuilder("Reservation", "r")
         .leftJoinAndSelect("r.orderItems", "oi")
+        .leftJoinAndSelect("oi.orderItemAttachments", "oia")
+        .leftJoinAndSelect("oia.file", "oiaf")
         .leftJoinAndSelect("oi.orderItemType", "oit")
         .leftJoinAndSelect("oi.entityStatus", "eoi")
         .leftJoinAndSelect("r.reservationStatus", "rs")

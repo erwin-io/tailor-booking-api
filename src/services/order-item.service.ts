@@ -47,7 +47,10 @@ export class OrderItemService {
           relations: {
             orderItemType: true,
             entityStatus: true,
-            reservation: true
+            reservation: true,
+            orderItemAttachments: {
+              file: true
+            }
           },
         });
         return orderItem;
@@ -76,7 +79,7 @@ export class OrderItemService {
       const { reservationId, orderItemTypeId, quantity } = addOrderItemDto;
       return await this.orderItemRepo.manager.transaction(
         async (entityManager) => {
-          const orderItem = new OrderItem();
+          let orderItem = new OrderItem();
           const reservation = await entityManager.findOne(Reservation, {
             where: { 
               reservationId: reservationId
@@ -111,7 +114,54 @@ export class OrderItemService {
           orderItem.quantity = quantity.toString();
           orderItem.reservation = reservation;
           orderItem.remarks = addOrderItemDto.remarks;
-          return await entityManager.save(OrderItem, orderItem);
+          orderItem = await entityManager.save(OrderItem, orderItem);
+          
+          for(let attachment of addOrderItemDto.orderItemAttachments) {
+            if (attachment) {
+              let orderItemAttachment = new OrderItemAttachment();
+              const newFileName: string = uuid();
+              const bucket = this.firebaseProvoder.app.storage().bucket();
+
+              const file = new Files();
+              file.fileName = `${newFileName}${extname(attachment.fileName)}`;
+
+              const bucketFile = bucket.file(
+                `items/attachments/${newFileName}${extname(
+                  attachment.fileName
+                )}`
+              );
+              const img = Buffer.from(attachment.data, "base64");
+              await bucketFile.save(img).then(async () => {
+                const url = await bucketFile.getSignedUrl({
+                  action: "read",
+                  expires: "03-09-2500",
+                });
+                file.url = url[0];
+                orderItemAttachment.file = await entityManager.save(
+                  Files,
+                  file
+                );
+              });
+              orderItemAttachment.orderItem = orderItem;
+              orderItemAttachment = await entityManager.save(
+                OrderItemAttachment,
+                orderItemAttachment
+              );
+            }
+          }
+          return entityManager.find(OrderItem, { 
+            where: { 
+              orderItemId : orderItem.orderItemId
+            },
+            relations: {
+              orderItemType: true,
+              entityStatus: true,
+              reservation: true,
+              orderItemAttachments: {
+                file: true
+              }
+            },
+          });
         }
       );
     }
@@ -166,7 +216,21 @@ export class OrderItemService {
             }
           });
           orderItem.remarks = dto.remarks;
-          return await entityManager.save(OrderItem, orderItem);
+          await entityManager.save(OrderItem, orderItem);
+          
+          return entityManager.find(OrderItem, { 
+            where: { 
+              orderItemId : orderItem.orderItemId
+            },
+            relations: {
+              orderItemType: true,
+              entityStatus: true,
+              reservation: true,
+              orderItemAttachments: {
+                file: true
+              }
+            },
+          });
         }
       );
     }
@@ -251,7 +315,7 @@ export class OrderItemService {
       try {
         return await this.orderItemRepo.manager.transaction( async(entityManager)=> {
           const orderItemAttachment = await entityManager.findOne(OrderItemAttachment, 
-            { where: { orderItemAttachmentId}, relations: ["file", "appointment"] }, 
+            { where: { orderItemAttachmentId}, relations: ["file", "orderItem"] }, 
           );
           if(orderItemAttachment) {
             await entityManager.delete(OrderItemAttachment, { orderItemAttachmentId });

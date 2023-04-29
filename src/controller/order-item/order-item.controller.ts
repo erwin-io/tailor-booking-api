@@ -3,7 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CustomResponse } from 'src/common/helper/customresponse.helpers';
 import { JwtAuthGuard } from 'src/core/auth/jwt.auth.guard';
 import { CreateOrderItemDto } from 'src/core/dto/order-item/order-item.create.dto';
-import { AddOrderItemDto, OrderItemDto } from 'src/core/dto/order-item/order-item.update.dto';
+import { AddOrderItemDto, OrderItemAttachmentDto, OrderItemDto } from 'src/core/dto/order-item/order-item.update.dto';
 import { OrderItemService } from 'src/services/order-item.service';
 
 @ApiTags("order-item")
@@ -84,6 +84,38 @@ export class OrderItemController {
       try {
         const res: CustomResponse = {};
         res.data = await this.orderItemService.delete(orderItemId);
+        res.success = true;
+        return res;
+      } catch (e) {
+        res.success = false;
+        res.message = e.message !== undefined ? e.message : e;
+        return res;
+      }
+    }
+  
+    @Post("addAttachmentFile")
+    @UseGuards(JwtAuthGuard)
+    async addAttachmentFile(@Body() orderItemAttachmentDto: OrderItemAttachmentDto) {
+      const res: CustomResponse = {};
+      try {
+        res.data = await this.orderItemService.addAttachmentFile(
+          orderItemAttachmentDto
+        );
+        res.success = true;
+        return res;
+      } catch (e) {
+        res.success = false;
+        res.message = e.message !== undefined ? e.message : e;
+        return res;
+      }
+    }
+  
+    @Delete("removeAttachmentFile/:orderItemAttachmentId")
+    async orderItemAttachmentId(@Param("orderItemAttachmentId") orderItemAttachmentId: string) {
+      const res: CustomResponse = {};
+      try {
+        const res: CustomResponse = {};
+        res.data = await this.orderItemService.removeAttachmentFile(orderItemAttachmentId);
         res.success = true;
         return res;
       } catch (e) {

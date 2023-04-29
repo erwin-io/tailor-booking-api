@@ -6,6 +6,8 @@ import { OrderItemType } from "src/shared/entities/OrderItemType";
 import { OrderItem } from "src/shared/entities/OrderItem";
 import { ReservationLevel } from "src/shared/entities/ReservationLevel";
 import { StaffViewModel } from "./staff.view-model";
+import { FilesViewModel } from "./file.view.mode";
+import { OrderItemAttachment } from "src/shared/entities/OrderItemAttachment";
 
 export class ReservationViewModel {
   reservationId: string;
@@ -47,6 +49,7 @@ export class OrderItemViewModel {
   remarks: string;
   quantity: string;
   orderItemType: OrderItemTypeViewModel;
+  orderItemAttachments: OrderItemAttachmentViewModel[];
   constructor(model: OrderItem | undefined) {
     if (!model || model === null) {
       return null;
@@ -54,10 +57,23 @@ export class OrderItemViewModel {
     this.orderItemId = model.orderItemId;
     this.remarks = model.remarks;
     this.orderItemType = model.orderItemType;
+    this.orderItemAttachments = model.orderItemAttachments;
   }
 }
 
 export class OrderItemTypeViewModel {
   orderItemTypeId: string;
   name: string;
+}
+
+export class OrderItemAttachmentViewModel {
+  orderItemAttachmentId: string;
+  file: FilesViewModel;
+  constructor(model: OrderItemAttachment | undefined) {
+    if (!model || model === null) {
+      return null;
+    }
+    this.orderItemAttachmentId = model.orderItemAttachmentId;
+    this.file = new FilesViewModel(model.file);
+  }
 }

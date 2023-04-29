@@ -19,6 +19,10 @@ export class AddOrderItemDto {
     @ApiProperty()
     @IsNotEmpty()
     quantity: string = "1";
+
+    @ApiProperty()
+    @IsOptional()
+    orderItemAttachments: AddOrderItemAttachmentDto[];
 }
 
 export class OrderItemDto extends AddOrderItemDto {
