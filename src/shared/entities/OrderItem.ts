@@ -4,11 +4,13 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { EntityStatus } from "./EntityStatus";
 import { OrderItemType } from "./OrderItemType";
 import { Reservation } from "./Reservation";
+import { OrderItemAttachment } from "./OrderItemAttachment";
 
 @Index("pk_orderitem", ["orderItemId"], { unique: true })
 @Entity("OrderItem", { schema: "dbo" })
@@ -39,4 +41,10 @@ export class OrderItem {
     { name: "ReservationId", referencedColumnName: "reservationId" },
   ])
   reservation: Reservation;
+
+  @OneToMany(
+    () => OrderItemAttachment,
+    (orderItemAttachment) => orderItemAttachment.orderItem
+  )
+  orderItemAttachments: OrderItemAttachment[];
 }

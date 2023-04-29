@@ -5,6 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { OrderItemAttachment } from "./OrderItemAttachment";
 import { UserProfilePic } from "./UserProfilePic";
 
 @Index("pk_files_901578250", ["fileId"], { unique: true })
@@ -18,6 +19,12 @@ export class Files {
 
   @Column("text", { name: "Url", nullable: true })
   url: string | null;
+
+  @OneToMany(
+    () => OrderItemAttachment,
+    (orderItemAttachment) => orderItemAttachment.file
+  )
+  orderItemAttachments: OrderItemAttachment[];
 
   @OneToMany(() => UserProfilePic, (userProfilePic) => userProfilePic.file)
   userProfilePics: UserProfilePic[];

@@ -26,6 +26,11 @@ import { Notifications } from "src/shared/entities/Notifications";
 import { NotificationDescriptionConstant, NotificationTitleConstant } from "src/common/constant/notifications.constant";
 import { MessagingDevicesResponse } from "firebase-admin/lib/messaging/messaging-api";
 import { formatId } from "src/common/helper/env.helper";
+import { OrderItemAttachment } from "src/shared/entities/OrderItemAttachment";
+import { v4 as uuid } from "uuid";
+import { extname } from "path";
+import { Files } from "src/shared/entities/Files";
+import { EntityStatus } from "src/shared/entities/EntityStatus";
 @Injectable()
 export class ReservationService {
   constructor(
@@ -231,7 +236,41 @@ export class ReservationService {
               );
             }
 
+            for(let attachment of o.orderItemAttachments) {
+              if (attachment) {
+                let orderItemAttachment = new OrderItemAttachment();
+                const newFileName: string = uuid();
+                const bucket = this.firebaseProvoder.app.storage().bucket();
+
+                const file = new Files();
+                file.fileName = `${newFileName}${extname(attachment.fileName)}`;
+
+                const bucketFile = bucket.file(
+                  `items/attachments/${newFileName}${extname(
+                    attachment.fileName
+                  )}`
+                );
+                const img = Buffer.from(attachment.data, "base64");
+                await bucketFile.save(img).then(async () => {
+                  const url = await bucketFile.getSignedUrl({
+                    action: "read",
+                    expires: "03-09-2500",
+                  });
+                  file.url = url[0];
+                  orderItemAttachment.file = await entityManager.save(
+                    Files,
+                    file
+                  );
+                });
+                orderItemAttachment.orderItem = newOrderItem;
+                orderItemAttachment = await entityManager.save(
+                  OrderItemAttachment,
+                  orderItemAttachment
+                );
+              }
+            }
           }
+          
           return await entityManager.findOne(Reservation, {
             where: { reservationId: newReservation.reservationId },
             relations: {

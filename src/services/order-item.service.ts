@@ -1,20 +1,26 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { extname } from 'path';
 import { EntityStatusEnum } from 'src/common/enums/entity-status.enum';
 import { ReservationStatusEnum } from 'src/common/enums/reservation-status.enum';
 import { CreateOrderItemDto } from 'src/core/dto/order-item/order-item.create.dto';
-import { AddOrderItemDto, OrderItemDto } from 'src/core/dto/order-item/order-item.update.dto';
+import { AddOrderItemDto, OrderItemAttachmentDto, OrderItemDto } from 'src/core/dto/order-item/order-item.update.dto';
 import { EntityStatus } from 'src/shared/entities/EntityStatus';
+import { Files } from 'src/shared/entities/Files';
 import { OrderItem } from 'src/shared/entities/OrderItem';
+import { OrderItemAttachment } from 'src/shared/entities/OrderItemAttachment';
 import { OrderItemType } from 'src/shared/entities/OrderItemType';
 import { Reservation } from 'src/shared/entities/Reservation';
 import { Repository } from 'typeorm';
+import { FirebaseProvider } from "src/core/provider/firebase/firebase-provider";
+import { v4 as uuid } from "uuid";
 
 @Injectable()
 export class OrderItemService {
     constructor(
       @InjectRepository(OrderItem)
-      private readonly orderItemRepo: Repository<OrderItem>
+      private readonly orderItemRepo: Repository<OrderItem>,
+      private firebaseProvoder: FirebaseProvider
     ) {}
     async findByRervationId(reservationId: string) {
       try {
@@ -188,6 +194,91 @@ export class OrderItemService {
             });
             return await this.orderItemRepo.save(orderItem);
           });
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    async addAttachmentFile(dto: OrderItemAttachmentDto) {
+      try {
+        return await this.orderItemRepo.manager.transaction( async(entityManager)=> {
+          if(dto.data) {
+            let orderItemAttachment = new OrderItemAttachment();
+            const newFileName: string = uuid();
+            const bucket = this.firebaseProvoder.app.storage().bucket();
+  
+            const file = new Files();
+            file.fileName = `${newFileName}${extname(dto.fileName)}`;
+  
+            const bucketFile = bucket.file(
+              `items/attachments/${newFileName}${extname(
+                dto.fileName
+              )}`
+            );
+            const img = Buffer.from(dto.data, "base64");
+            await bucketFile.save(img).then(async () => {
+              const url = await bucketFile.getSignedUrl({
+                action: "read",
+                expires: "03-09-2500",
+              });
+              file.url = url[0];
+              orderItemAttachment.file = await entityManager.save(
+                Files,
+                file
+              );
+            });
+            orderItemAttachment.orderItem = await entityManager.findOneBy(OrderItem, { orderItemId: dto.orderItemId });
+            await entityManager.save(
+              OrderItemAttachment,
+              orderItemAttachment
+            );
+            return entityManager.find(OrderItemAttachment, { 
+              where: { 
+                orderItem: { orderItemId : dto.orderItemId }
+              },
+              relations: ["file"]
+            });
+          } else {
+            return [];
+          }
+        })
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    async removeAttachmentFile(orderItemAttachmentId: string) {
+      try {
+        return await this.orderItemRepo.manager.transaction( async(entityManager)=> {
+          const orderItemAttachment = await entityManager.findOne(OrderItemAttachment, 
+            { where: { orderItemAttachmentId}, relations: ["file", "appointment"] }, 
+          );
+          if(orderItemAttachment) {
+            await entityManager.delete(OrderItemAttachment, { orderItemAttachmentId });
+            const file = orderItemAttachment.file;
+            await entityManager.delete(Files, { fileId: file.fileId });
+            
+            try {
+              const bucket = this.firebaseProvoder.app.storage().bucket();
+              const deleteFile = bucket.file(
+                `items/attachments/${orderItemAttachment.file.fileName}`
+              );
+              deleteFile.delete();
+            } catch (ex) {
+              console.log(ex);
+            }
+  
+            const orderItem = orderItemAttachment.orderItem;
+            return entityManager.find(OrderItemAttachment, { 
+              where: { 
+                orderItem: { orderItemId: orderItem.orderItemId }
+              },
+              relations: ["file"]
+            });
+          } else {
+            return [];
+          }
+        })
       } catch (e) {
         throw e;
       }

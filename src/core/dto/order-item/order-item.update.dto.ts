@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsNumberString, IsPositive } from "class-validator";
+import { IsBase64, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsPositive, IsString } from "class-validator";
+import { AddOrderItemAttachmentDto } from "./order-item.create.dto";
 
 
 export class AddOrderItemDto {
@@ -21,6 +22,12 @@ export class AddOrderItemDto {
 }
 
 export class OrderItemDto extends AddOrderItemDto {
+    @ApiProperty()
+    @IsNotEmpty()
+    orderItemId: string;
+}
+
+export class OrderItemAttachmentDto extends AddOrderItemAttachmentDto {
     @ApiProperty()
     @IsNotEmpty()
     orderItemId: string;
