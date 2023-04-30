@@ -174,7 +174,7 @@ export class ReservationService {
         .leftJoinAndSelect("r.staff", "s")
         .leftJoinAndSelect("s.user", "su")
           .where(options)
-          .andWhere("eoi.entityStatusId = :entityStatusId", { entityStatusId : EntityStatusEnum.ACTIVE.toString() })
+          // .andWhere("eoi.entityStatusId = :entityStatusId", { entityStatusId : EntityStatusEnum.ACTIVE.toString() })
           .getOne()
       );
       return new ReservationViewModel(query);
