@@ -17,6 +17,10 @@ export class UpdateReservationStatusDto extends ReservationDto {
   @ApiProperty()
   @IsOptional()
   adminRemarks;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  otherFee: string = "0";
 }
 
 export class ProcessOrderDto extends ReservationDto {
@@ -33,4 +37,8 @@ export class ProcessOrderDto extends ReservationDto {
   @Transform((value) => moment(new Date(value.value)).format("YYYY-MM-DD"))
   @IsNotEmpty()
   estCompletionDate: Date;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  serviceFee: string = "0";
 }

@@ -43,7 +43,7 @@ export class Customers {
   @Column("date", { name: "BirthDate" })
   birthDate: string;
 
-  @Column("bigint", { name: "Age" })
+  @Column("bigint", { name: "Age", default: () => "0" })
   age: string;
 
   @Column("timestamp without time zone", {

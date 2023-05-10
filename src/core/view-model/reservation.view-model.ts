@@ -21,6 +21,9 @@ export class ReservationViewModel {
   orderItems: OrderItemViewModel[];
   reservationStatus: ReservationStatusViewModel;
   staff: StaffViewModel;
+  payments: PaymentViewModel[];
+  serviceFee: number = 0;
+  otherFee: number = 0;
   constructor(model: Reservation | undefined) {
     if (!model || model === null) {
       return null;
@@ -36,6 +39,9 @@ export class ReservationViewModel {
     this.reservationStatus = model.reservationStatus;
     this.orderItems = model.orderItems;
     this.staff = new StaffViewModel(model.staff);
+    this.payments = model.payments;
+    this.serviceFee = Number(model.serviceFee);
+    this.otherFee = Number(model.otherFee);
   }
 }
 
@@ -76,4 +82,17 @@ export class OrderItemAttachmentViewModel {
     this.orderItemAttachmentId = model.orderItemAttachmentId;
     this.file = new FilesViewModel(model.file);
   }
+}
+
+export class PaymentViewModel {
+  paymentId: string;
+  paymentDate: string;
+  referenceNo: string;
+  isVoid: boolean;
+  paymentType: PaymentTypeViewModel;
+}
+
+export class PaymentTypeViewModel {
+  paymentTypeId: string;
+  name: string;
 }

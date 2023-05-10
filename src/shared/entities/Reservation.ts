@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { Notifications } from "./Notifications";
 import { OrderItem } from "./OrderItem";
+import { Payment } from "./Payment";
 import { Customers } from "./Customers";
 import { ReservationLevel } from "./ReservationLevel";
 import { ReservationStatus } from "./ReservationStatus";
@@ -39,11 +40,20 @@ export class Reservation {
   @Column("character varying", { name: "AdminRemarks", nullable: true })
   adminRemarks: string | null;
 
+  @Column("numeric", { name: "ServiceFee", default: () => "0" })
+  serviceFee: string;
+
+  @Column("numeric", { name: "OtherFee", default: () => "0" })
+  otherFee: string;
+
   @OneToMany(() => Notifications, (notifications) => notifications.reservation)
   notifications: Notifications[];
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.reservation)
   orderItems: OrderItem[];
+
+  @OneToMany(() => Payment, (payment) => payment.reservation)
+  payments: Payment[];
 
   @ManyToOne(() => Customers, (customers) => customers.reservations)
   @JoinColumn([{ name: "CustomerId", referencedColumnName: "customerId" }])

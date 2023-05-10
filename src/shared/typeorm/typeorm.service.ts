@@ -20,6 +20,8 @@ import { ReservationLevel } from "../entities/ReservationLevel";
 import { OrderItem } from "../entities/OrderItem";
 import { OrderItemType } from "../entities/OrderItemType";
 import { OrderItemAttachment } from "../entities/OrderItemAttachment";
+import { Payment } from "../entities/Payment";
+import { PaymentType } from "../entities/PaymentType";
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -55,6 +57,8 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         OrderItem,
         OrderItemType,
         OrderItemAttachment,
+        Payment,
+        PaymentType,
       ],
       synchronize: false,// never use TRUE in production!
       ssl: ssl.toLocaleLowerCase().includes("true"),

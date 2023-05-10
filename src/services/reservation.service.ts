@@ -85,7 +85,9 @@ export class ReservationService {
         .leftJoinAndSelect("oi.entityStatus", "eoi")
         .leftJoinAndSelect("r.reservationStatus", "rs")
         .leftJoinAndSelect("r.reservationLevel", "rl")
-        .leftJoinAndSelect("r.customer", "c");
+        .leftJoinAndSelect("r.customer", "c")
+        .leftJoinAndSelect("r.payments", "rp")
+        .leftJoinAndSelect("rp.paymentType", "rpt");
       if (advanceSearch) {
         query = query
           .where(
@@ -141,6 +143,8 @@ export class ReservationService {
         .leftJoinAndSelect("r.reservationStatus", "rs")
         .leftJoinAndSelect("r.reservationLevel", "rl")
         .leftJoinAndSelect("r.customer", "c")
+        .leftJoinAndSelect("r.payments", "rp")
+        .leftJoinAndSelect("rp.paymentType", "rpt")
         .where("c.customerId = :customerId")
         .andWhere("rs.name IN(:...status)")
         // .andWhere("eoi.entityStatusId = :entityStatusId")
@@ -172,6 +176,8 @@ export class ReservationService {
         .leftJoinAndSelect("r.customer", "c")
         .leftJoinAndSelect("c.user", "cu")
         .leftJoinAndSelect("r.staff", "s")
+        .leftJoinAndSelect("r.payments", "rp")
+        .leftJoinAndSelect("rp.paymentType", "rpt")
         .leftJoinAndSelect("s.user", "su")
           .where(options)
           // .andWhere("eoi.entityStatusId = :entityStatusId", { entityStatusId : EntityStatusEnum.ACTIVE.toString() })
@@ -300,7 +306,10 @@ export class ReservationService {
             relations: {
               reservationLevel: true,
               reservationStatus: true,
-              customer: true
+              customer: true,
+              payments: {
+                paymentType: true
+              }
             },
           });
           if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
@@ -310,8 +319,8 @@ export class ReservationService {
             );
           }
           //pending validation
-          if (reservation.reservationStatus.reservationStatusId ===ReservationStatusEnum.PENDING.toString()) {
-            if (reservationStatusId === ReservationStatusEnum.COMPLETED.toString()) {
+          if (reservation.reservationStatus.reservationStatusId.toString() === ReservationStatusEnum.PENDING.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is not yet processed",
                 HttpStatus.BAD_REQUEST
@@ -320,26 +329,26 @@ export class ReservationService {
           }
           //pending validation end
           //approved validation
-          if (reservation.reservationStatus.reservationStatusId ===ReservationStatusEnum.APPROVED.toString()) {
-            if (reservationStatusId === ReservationStatusEnum.PENDING.toString()) {
+          if (reservation.reservationStatus.reservationStatusId.toString() ===ReservationStatusEnum.APPROVED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.PENDING.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already approved",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.COMPLETED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is not yet processed",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.DECLINED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already approved",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.CANCELLED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.CANCELLED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already approved",
                 HttpStatus.BAD_REQUEST
@@ -348,26 +357,26 @@ export class ReservationService {
           }
           //approved validation end
           //processed validation start
-          if (reservation.reservationStatus.reservationStatusId ===ReservationStatusEnum.PROCESSED.toString()) {
-            if (reservationStatusId === ReservationStatusEnum.PENDING.toString()) {
+          if (reservation.reservationStatus.reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.PENDING.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already processed",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.APPROVED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.APPROVED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already processed",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.DECLINED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already processed",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.CANCELLED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.CANCELLED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already processed",
                 HttpStatus.BAD_REQUEST
@@ -376,26 +385,26 @@ export class ReservationService {
           }
           //processed validation end
           //completed validation start
-          if (reservation.reservationStatus.reservationStatusId ===ReservationStatusEnum.COMPLETED.toString()) {
-            if (reservationStatusId === ReservationStatusEnum.PENDING.toString()) {
+          if (reservation.reservationStatus.reservationStatusId.toString() ===ReservationStatusEnum.COMPLETED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.PENDING.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already completed",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.APPROVED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.APPROVED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already completed",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.DECLINED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already completed",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.CANCELLED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.CANCELLED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already completed",
                 HttpStatus.BAD_REQUEST
@@ -404,26 +413,26 @@ export class ReservationService {
           }
           //completed validation end
           //declined validation start
-          if (reservation.reservationStatus.reservationStatusId ===ReservationStatusEnum.DECLINED.toString()) {
-            if (reservationStatusId === ReservationStatusEnum.PENDING.toString()) {
+          if (reservation.reservationStatus.reservationStatusId.toString() ===ReservationStatusEnum.DECLINED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.PENDING.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already declined",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.APPROVED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.APPROVED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already declined",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.COMPLETED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already declined",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.CANCELLED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.CANCELLED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already declined",
                 HttpStatus.BAD_REQUEST
@@ -432,26 +441,26 @@ export class ReservationService {
           }
           //declined validation end
           //cancelled validation start
-          if (reservation.reservationStatus.reservationStatusId === ReservationStatusEnum.CANCELLED.toString()) {
-            if (reservationStatusId === ReservationStatusEnum.PENDING.toString()) {
+          if (reservation.reservationStatus.reservationStatusId.toString() === ReservationStatusEnum.CANCELLED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.PENDING.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already cancelled",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.APPROVED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.APPROVED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already cancelled",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.COMPLETED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already cancelled",
                 HttpStatus.BAD_REQUEST
               );
             }
-            if (reservationStatusId === ReservationStatusEnum.DECLINED.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already cancelled",
                 HttpStatus.BAD_REQUEST
@@ -461,10 +470,17 @@ export class ReservationService {
           //cancelled validation end
 
           if (
-            reservationStatusId === ReservationStatusEnum.DECLINED.toString()
+            reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()
           ) {
             reservation.adminRemarks = dto.adminRemarks;
           }
+          if(!dto.otherFee || dto.otherFee === "" || Number.isNaN(Number(dto.otherFee))) {
+            throw new HttpException(
+              `Invalid value for other fee! `,
+              HttpStatus.BAD_REQUEST
+            );
+          }
+          reservation.otherFee = dto.otherFee;
           reservation.reservationStatus = await entityManager.findOne(
             ReservationStatus,
             {
@@ -589,6 +605,19 @@ export class ReservationService {
           }
         );
         reservation.estCompletionDate = moment(dto.estCompletionDate).format("YYYY-MM-DD");
+        if(!dto.serviceFee || dto.serviceFee === "" || Number.isNaN(Number(dto.serviceFee))) {
+          throw new HttpException(
+            `Invalid value for service fee! `,
+            HttpStatus.BAD_REQUEST
+          );
+        }
+        if(Number(dto.serviceFee) <= 0) {
+          throw new HttpException(
+            `Unable to process, please enter the service fee amount! `,
+            HttpStatus.BAD_REQUEST
+          );
+        }
+        reservation.serviceFee = dto.serviceFee;
         reservation = await entityManager.save(Reservation, reservation);
         let notif = new Notifications();
         notif.reservation = reservation;
