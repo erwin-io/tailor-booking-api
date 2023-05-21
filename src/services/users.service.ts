@@ -38,6 +38,7 @@ import { Files } from "src/shared/entities/Files";
 import { extname, join } from "path";
 import { v4 as uuid } from "uuid";
 import * as moment from "moment";
+import { DateConstant } from "src/common/constant/date.constant";
 
 @Injectable()
 export class UsersService {
@@ -360,7 +361,7 @@ export class UsersService {
       customer.lastName = userDto.lastName;
       customer.email = userDto.email;
       customer.mobileNumber = userDto.mobileNumber;
-      customer.birthDate = moment(userDto.birthDate).format("YYYY-MM-DD");
+      customer.birthDate = moment(userDto.birthDate, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
       customer.age = await (await getAge(new Date(userDto.birthDate))).toString();
       customer.address = userDto.address;
       customer.gender = new Gender();
@@ -429,7 +430,7 @@ export class UsersService {
       customer.email = userDto.email;
       customer.mobileNumber = userDto.mobileNumber;
       customer.address = userDto.address;
-      customer.birthDate = moment(userDto.birthDate).format("YYYY-MM-DD");
+      customer.birthDate = moment(userDto.birthDate, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
       customer.age = (await getAge(new Date(userDto.birthDate))).toString();
       customer.gender = new Gender();
       customer.gender.genderId = userDto.genderId;
@@ -700,7 +701,7 @@ export class UsersService {
     currentHashedRefreshToken: string,
     userId: number
   ) {
-    await this.userRepo.update(userId, {
+    return await this.userRepo.update(userId, {
       currentHashedRefreshToken,
     });
   }

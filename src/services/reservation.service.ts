@@ -31,6 +31,7 @@ import { v4 as uuid } from "uuid";
 import { extname } from "path";
 import { Files } from "src/shared/entities/Files";
 import { EntityStatus } from "src/shared/entities/EntityStatus";
+import { DateConstant } from "src/common/constant/date.constant";
 @Injectable()
 export class ReservationService {
   constructor(
@@ -75,8 +76,8 @@ export class ReservationService {
       ) {
         reqCompletionDateTo = new Date(new Date().setHours(0,0,0,0))
       }
-      params.reqCompletionDateFrom = moment(reqCompletionDateFrom).format("YYYY-MM-DD");
-      params.reqCompletionDateTo = moment(reqCompletionDateTo).format("YYYY-MM-DD");
+      params.reqCompletionDateFrom = moment(reqCompletionDateFrom, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
+      params.reqCompletionDateTo = moment(reqCompletionDateTo, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
       params.status = params.status.map(x=>x.toString().toLowerCase())
       let query = this.reservationRepo.manager
         .createQueryBuilder("Reservation", "r")
@@ -207,7 +208,7 @@ export class ReservationService {
       return await this.reservationRepo.manager.transaction(
         async (entityManager) => {
           let newReservation = new Reservation();
-          newReservation.reqCompletionDate = moment(dto.reqCompletionDate).format('YYYY-MM-DD');
+          newReservation.reqCompletionDate = moment(dto.reqCompletionDate, DateConstant.DATE_LANGUAGE).format('YYYY-MM-DD');
           newReservation.description = dto.description;
           newReservation.customer = await entityManager.findOne(Customers, {
             where: { customerId: dto.customerId },
@@ -604,7 +605,7 @@ export class ReservationService {
             where: { reservationStatusId: ReservationStatusEnum.PROCESSED.toString() },
           }
         );
-        reservation.estCompletionDate = moment(dto.estCompletionDate).format("YYYY-MM-DD");
+        reservation.estCompletionDate = moment(dto.estCompletionDate, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
         if(!dto.serviceFee || dto.serviceFee === "" || Number.isNaN(Number(dto.serviceFee))) {
           throw new HttpException(
             `Invalid value for service fee! `,

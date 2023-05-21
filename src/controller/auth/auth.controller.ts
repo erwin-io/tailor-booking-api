@@ -12,6 +12,7 @@ import {
   Req,
   UseGuards,
   Param,
+  Headers,
 } from "@nestjs/common";
 import { AuthService } from "../../services/auth.service";
 import { LoginUserDto } from "../../core/dto/users/user-login.dto";
@@ -56,10 +57,10 @@ export class AuthController {
   }
 
   @Post("login/staff")
-  public async loginStaff(@Body() loginUserDto: LoginUserDto) {
+  public async loginStaff(@Body() loginUserDto: LoginUserDto, @Headers() headers) {
     const res: CustomResponse = {};
     try {
-      res.data = await this.authService.loginStaff(loginUserDto);
+      res.data = await this.authService.loginStaff(loginUserDto, headers);
       res.success = true;
       return res;
     } catch (e) {
@@ -98,13 +99,13 @@ export class AuthController {
     }
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth("jwt")
   @Post("/logout")
-  public async logout(@GetUser() user: UserDto) {
+  @UseGuards(JwtAuthGuard)
+  public async logout(@GetUser() user: UserDto, @Headers() headers) {
     const res: CustomResponse = {};
     try {
-      this.authService.logOut(user.userId);
+      this.authService.logOut(user.userId, headers);
       res.success = true;
       return res;
     } catch (e) {
@@ -114,8 +115,9 @@ export class AuthController {
     }
   }
 
-  @UseGuards(LocalAuthGuard)
+  @ApiBearerAuth("jwt")
   @Get("whoami")
+  @UseGuards(LocalAuthGuard)
   public async testAuth(@Req() req: any): Promise<JwtPayload> {
     return req.user;
   }

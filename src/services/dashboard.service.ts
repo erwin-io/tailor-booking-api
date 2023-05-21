@@ -5,6 +5,7 @@ import * as moment from "moment";
 import { Reservation } from "src/shared/entities/Reservation";
 import { ReservationStatusEnum } from "src/common/enums/reservation-status.enum";
 import { forkJoin } from 'rxjs'
+import { DateConstant } from "src/common/constant/date.constant";
 
 @Injectable()
 export class DashboardService {
@@ -22,8 +23,8 @@ export class DashboardService {
         dateFrom: new Date(new Date(year, (month - 1), 1).setHours(0,0,0,0)),
         dateTo: new Date(new Date(year, month, 0).setHours(24,0,0,0)),
       };
-      params.dateFrom = moment(params.dateFrom).format("YYYY-MM-DD");
-      params.dateTo = moment(params.dateTo).format("YYYY-MM-DD");
+      params.dateFrom = moment(params.dateFrom, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
+      params.dateTo = moment(params.dateTo, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
 
       let query = this.reservationRepo.manager
         .createQueryBuilder("Reservation", "r")
@@ -74,8 +75,8 @@ export class DashboardService {
         dateFrom: new Date(date.setHours(0,0,0,0)),
         dateTo: new Date(date.setDate(date.getDate() + days)),
       };
-      params.dateFrom = moment(params.dateFrom).format("YYYY-MM-DD");
-      params.dateTo = moment(new Date(params.dateTo.setHours(0,0,0,0))).format("YYYY-MM-DD");
+      params.dateFrom = moment(params.dateFrom, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
+      params.dateTo = moment(new Date(params.dateTo.setHours(0,0,0,0)), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
 
       let query = this.reservationRepo.manager
         .createQueryBuilder("Reservation", "r")
@@ -116,7 +117,7 @@ export class DashboardService {
   ) {
     try {
       const params: any = {
-        dateDue: moment(date).format("YYYY-MM-DD")
+        dateDue: moment(date, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD")
       };
 
       let query = this.reservationRepo.manager

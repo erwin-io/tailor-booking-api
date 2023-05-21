@@ -11,11 +11,16 @@ import { compare, hash } from "src/common/utils/utils";
 import { RoleEnum } from "src/common/enums/role.enum";
 import { UserTypeEnum } from "src/common/enums/user-type.enum";
 import { NotificationService } from "./notification.service";
+import { ActivityLogService } from "./activity-log.service";
+import { ActivityTypeEnum } from "src/common/enums/activity-type.enum";
+import * as moment from "moment";
+import { DateConstant } from "src/common/constant/date.constant";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
+    private readonly activityLogService: ActivityLogService,
     private readonly notificationService: NotificationService,
     private readonly jwtService: JwtService
   ) {}
@@ -71,7 +76,9 @@ export class AuthService {
     };
   }
 
-  async loginStaff({ username, password }: LoginUserDto) {
+  async loginStaff({ username, password }: LoginUserDto, headers?) {
+    var uaParser = require('ua-parser-js');
+    let uaInfo: { browser: { name: string }, os: { name: string; version: string }} = uaParser(headers['user-agent']);
     // find user in db
     const user: Users = await this.usersService.findByLoginStaff(
       username,
@@ -96,6 +103,14 @@ export class AuthService {
         : getInfo.staffid;
     const { fullName, email, mobileNumber, address, birthDate, age, gender } =
       getInfo;
+      await this.activityLogService.log(
+        ActivityTypeEnum.USER_LOGIN.toString(), 
+        userId, 
+        new Date(),
+        uaInfo.os.name,
+        uaInfo.os.version,
+        uaInfo.browser.name,
+        )
     return {
       userId,
       username,
@@ -183,7 +198,17 @@ export class AuthService {
     };
   }
 
-  async logOut(userId: string) {
+  async logOut(userId: string, headers?) {
+    var uaParser = require('ua-parser-js');
+    let uaInfo: { browser: { name: string }, os: { name: string; version: string }} = uaParser(headers['user-agent']);
+    await this.activityLogService.log(
+      ActivityTypeEnum.USER_LOGOUT.toString(), 
+      userId, 
+      new Date(),
+      uaInfo.os.name,
+      uaInfo.os.version,
+      uaInfo.browser.name,
+      )
     await this.updateRefreshTokenInUser(null, userId);
   }
 
@@ -220,7 +245,7 @@ export class AuthService {
       refreshToken = await hash(refreshToken);
     }
 
-    await this.usersService.setCurrentRefreshToken(refreshToken, userId);
+    return await this.usersService.setCurrentRefreshToken(refreshToken, userId);
   }
 
   async getNewAccessAndRefreshToken(userId: string) {

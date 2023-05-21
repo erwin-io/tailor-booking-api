@@ -10,6 +10,7 @@ import { Payment } from "src/shared/entities/Payment";
 import { PaymentType } from "src/shared/entities/PaymentType";
 import { Repository } from "typeorm";
 import * as moment from "moment";
+import { DateConstant } from "src/common/constant/date.constant";
 
 @Injectable()
 export class PaymentService {
@@ -79,7 +80,7 @@ export class PaymentService {
       const payment = new Payment();
       payment.reservation = new Reservation();
       payment.reservation.reservationId = createPaymentDto.reservationId;
-      payment.paymentDate = moment(createPaymentDto.paymentDate).format("YYYY-MM-DD");
+      payment.paymentDate = moment(createPaymentDto.paymentDate, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
       payment.paymentType = new PaymentType();
       payment.paymentType.paymentTypeId = createPaymentDto.paymentTypeId;
       payment.referenceNo = createPaymentDto.referenceNo;

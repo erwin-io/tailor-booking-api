@@ -13,6 +13,7 @@ import { RolesModule } from "../roles/roles.module";
 import { NotificationModule } from "../notification/notification.module";
 import { FirebaseProviderModule } from "src/core/provider/firebase/firebase-provider.module";
 import { FileModule } from "../file/file.module";
+import { ActivityLogModule } from "../activity-log/activity-log.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { FileModule } from "../file/file.module";
     FileModule,
     RolesModule,
     NotificationModule,
+    ActivityLogModule,
     PassportModule.register({}),
     JwtModule.register({}),
     TypeOrmModule.forFeature([Users, Roles]),

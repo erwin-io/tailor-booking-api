@@ -17,6 +17,9 @@ import { OrderItemTypeModule } from './controller/order-item-type/order-item-typ
 import { OrderItemModule } from './controller/order-item/order-item.module';
 import { OrderItemService } from './services/order-item.service';
 import { PaymentsModule } from "./controller/payments/payments.module";
+import { ActivityLogService } from './services/activity-log.service';
+import { ActivityLogController } from './controller/activity-log/activity-log.controller';
+import { ActivityLogModule } from './controller/activity-log/activity-log.module';
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 @Module({
   imports: [
@@ -38,7 +41,8 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     ReservationModule,
     OrderItemTypeModule,
     OrderItemModule,
-    PaymentsModule
+    PaymentsModule,
+    ActivityLogModule
   ],
   providers: [AppService],
   controllers: [],

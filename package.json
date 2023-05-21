@@ -54,7 +54,8 @@
     "rxjs": "^7.2.0",
     "socket.io": "^4.5.4",
     "stream-buffers": "^3.0.2",
-    "typeorm": "^0.3.7"
+    "typeorm": "^0.3.7",
+    "ua-parser-js": "^1.0.35"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

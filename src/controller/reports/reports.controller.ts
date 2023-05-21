@@ -20,7 +20,6 @@ import { JwtAuthGuard } from "src/core/auth/jwt.auth.guard";
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
   
-
   @Get("getPaymentsInvoice")
   @ApiQuery({ name: "paymentId", required: false })
   // @UseGuards(JwtAuthGuard)
