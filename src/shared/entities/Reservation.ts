@@ -46,6 +46,9 @@ export class Reservation {
   @Column("numeric", { name: "OtherFee", default: () => "0" })
   otherFee: string;
 
+  @Column("character varying", { name: "ReservationCode" })
+  reservationCode: string;
+
   @OneToMany(() => Notifications, (notifications) => notifications.reservation)
   notifications: Notifications[];
 

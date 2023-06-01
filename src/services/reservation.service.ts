@@ -88,6 +88,7 @@ export class ReservationService {
         .leftJoinAndSelect("r.reservationLevel", "rl")
         .leftJoinAndSelect("r.customer", "c")
         .leftJoinAndSelect("r.payments", "rp")
+        .leftJoinAndSelect("r.staff", "s")
         .leftJoinAndSelect("rp.paymentType", "rpt");
       if (advanceSearch) {
         query = query
@@ -105,6 +106,9 @@ export class ReservationService {
           .orWhere("LOWER(rl.name) like :keyword")
           .andWhere(
             "CONCAT(LOWER(c.firstName), ' ', LOWER(c.lastName)) LIKE :keyword"
+          )
+          .andWhere(
+            "LOWER(s.name) LIKE :keyword"
           )
           .orderBy("rs.reservationStatusId", "ASC")
           .addOrderBy("r.reservationId", "ASC");
@@ -203,6 +207,18 @@ export class ReservationService {
     }
   }
 
+  async findByCode(reservationCode: string) {
+    try {
+      const reservation = await this.findOne({ reservationCode });
+      if (!reservation) {
+        throw new HttpException("Reservation not found", HttpStatus.NOT_FOUND);
+      }
+      return reservation;
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async createReservation(dto: CreateReservationDto) {
     try {
       return await this.reservationRepo.manager.transaction(
@@ -245,39 +261,41 @@ export class ReservationService {
               );
             }
 
-            for(let attachment of o.orderItemAttachments) {
-              if (attachment) {
-                let orderItemAttachment = new OrderItemAttachment();
-                const newFileName: string = uuid();
-                const bucket = this.firebaseProvoder.app.storage().bucket();
-
-                const file = new Files();
-                file.fileName = `${newFileName}${extname(attachment.fileName)}`;
-
-                const bucketFile = bucket.file(
-                  `items/attachments/${newFileName}${extname(
-                    attachment.fileName
-                  )}`
-                );
-                const img = Buffer.from(attachment.data, "base64");
-                await bucketFile.save(img).then(async () => {
-                  const url = await bucketFile.getSignedUrl({
-                    action: "read",
-                    expires: "03-09-2500",
-                  });
-                  file.url = url[0];
-                  orderItemAttachment.file = await entityManager.save(
-                    Files,
-                    file
+            if(o.orderItemAttachments && o.orderItemAttachments.length > 0) {
+              for(let attachment of o.orderItemAttachments) {
+                if (attachment) {
+                  let orderItemAttachment = new OrderItemAttachment();
+                  const newFileName: string = uuid();
+                  const bucket = this.firebaseProvoder.app.storage().bucket();
+  
+                  const file = new Files();
+                  file.fileName = `${newFileName}${extname(attachment.fileName)}`;
+  
+                  const bucketFile = bucket.file(
+                    `items/attachments/${newFileName}${extname(
+                      attachment.fileName
+                    )}`
                   );
-                });
-                orderItemAttachment.orderItem = newOrderItem;
-                orderItemAttachment = await entityManager.save(
-                  OrderItemAttachment,
-                  orderItemAttachment
-                );
-              }
+                  const img = Buffer.from(attachment.data, "base64");
+                  await bucketFile.save(img).then(async () => {
+                    const url = await bucketFile.getSignedUrl({
+                      action: "read",
+                      expires: "03-09-2500",
+                    });
+                    file.url = url[0];
+                    orderItemAttachment.file = await entityManager.save(
+                      Files,
+                      file
+                    );
+                  });
+                  orderItemAttachment.orderItem = newOrderItem;
+                  orderItemAttachment = await entityManager.save(
+                    OrderItemAttachment,
+                    orderItemAttachment
+                  );
+                }
             }
+          }
           }
           
           return await entityManager.findOne(Reservation, {

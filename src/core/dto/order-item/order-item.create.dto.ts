@@ -16,7 +16,7 @@ export class CreateOrderItemDto {
 
     @ApiProperty()
     @IsOptional()
-    orderItemAttachments: AddOrderItemAttachmentDto[];
+    orderItemAttachments: AddOrderItemAttachmentDto[] = [];
 }
 
 export class AddOrderItemAttachmentDto {

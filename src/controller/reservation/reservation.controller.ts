@@ -108,6 +108,21 @@ export class ReservationController {
     }
   }
 
+  @Get("getByCode/:reservationCode")
+  @UseGuards(JwtAuthGuard)
+  async getByCode(@Param("reservationCode") getByCode: string) {
+    const res: CustomResponse = {};
+    try {
+      res.data = await this.reservationService.findByCode(getByCode);
+      res.success = true;
+      return res;
+    } catch (e) {
+      res.success = false;
+      res.message = e.message !== undefined ? e.message : e;
+      return res;
+    }
+  }
+
   @Post("createReservation")
   @UseGuards(JwtAuthGuard)
   async createReservation(@Body() dto: CreateReservationDto) {

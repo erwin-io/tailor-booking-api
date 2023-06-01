@@ -11,6 +11,7 @@ import { OrderItemAttachment } from "src/shared/entities/OrderItemAttachment";
 
 export class ReservationViewModel {
   reservationId: string;
+  reservationCode: string;
   reqCompletionDate: string;
   estCompletionDate: string;
   description: string;
@@ -29,6 +30,7 @@ export class ReservationViewModel {
       return null;
     }
     this.reservationId = model.reservationId;
+    this.reservationCode = model.reservationCode;
     this.reqCompletionDate = model.reqCompletionDate;
     this.estCompletionDate = model.estCompletionDate;
     this.description = model.description;
