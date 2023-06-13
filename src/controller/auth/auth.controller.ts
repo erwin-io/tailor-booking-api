@@ -1,4 +1,4 @@
-import { UserDto } from "../../core/dto/users/user.update.dto";
+import { UserDto, VerifyOtpDto } from "../../core/dto/users/user.update.dto";
 import {
   CustomerUserDto,
   StaffUserDto,
@@ -56,6 +56,7 @@ export class AuthController {
     }
   }
 
+  @UseGuards(LocalAuthGuard)
   @Post("login/staff")
   public async loginStaff(@Body() loginUserDto: LoginUserDto, @Headers() headers) {
     const res: CustomResponse = {};
@@ -117,7 +118,7 @@ export class AuthController {
 
   @ApiBearerAuth("jwt")
   @Get("whoami")
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   public async testAuth(@Req() req: any): Promise<JwtPayload> {
     return req.user;
   }
@@ -132,6 +133,20 @@ export class AuthController {
       return this.authService.getNewAccessAndRefreshToken(result.userId);
     } else {
       return null;
+    }
+  }
+
+  @Post("/verifyOtp")
+  public async verifyOtp(@Body() dto: VerifyOtpDto) {
+    const res: CustomResponse = {};
+    try {
+      res.data = await this.authService.verifyOtp(dto.userId, dto.otp);
+      res.success = true;
+      return res;
+    } catch (e) {
+      res.success = false;
+      res.message = e.message !== undefined ? e.message : e;
+      return res;
     }
   }
 }

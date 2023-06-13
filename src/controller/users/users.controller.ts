@@ -270,9 +270,9 @@ export class UsersController {
     }
   }
 
-  @Put("/udpdatePassword")
+  @Put("/updatePassword")
   @UseGuards(JwtAuthGuard)
-  async udpdatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
+  async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};

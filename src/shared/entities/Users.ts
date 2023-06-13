@@ -42,6 +42,12 @@ export class Users {
   @Column("boolean", { name: "Enable", default: () => "true" })
   enable: boolean;
 
+  @Column("character varying", { name: "Otp" })
+  otp: string;
+
+  @Column("boolean", { name: "IsVerified", default: () => "false" })
+  isVerified: boolean;
+
   @OneToMany(() => ActivityLog, (activityLog) => activityLog.user)
   activityLogs: ActivityLog[];
 

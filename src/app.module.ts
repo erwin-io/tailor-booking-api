@@ -20,6 +20,9 @@ import { PaymentsModule } from "./controller/payments/payments.module";
 import { ActivityLogService } from './services/activity-log.service';
 import { ActivityLogController } from './controller/activity-log/activity-log.controller';
 import { ActivityLogModule } from './controller/activity-log/activity-log.module';
+import { VirtualOtpService } from './services/virtual-otp.service';
+import { VirtualOtpModule } from './controller/virtual-otp/virtual-otp.module';
+import { OtpService } from './services/otp.service';
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 @Module({
   imports: [
@@ -42,7 +45,8 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     OrderItemTypeModule,
     OrderItemModule,
     PaymentsModule,
-    ActivityLogModule
+    ActivityLogModule,
+    VirtualOtpModule,
   ],
   providers: [AppService],
   controllers: [],

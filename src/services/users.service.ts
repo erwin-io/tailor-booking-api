@@ -19,6 +19,7 @@ import {
   hash,
   getAge,
   isStaffRegistrationApproved,
+  generateOTP,
 } from "../common/utils/utils";
 import { Users } from "../shared/entities/Users";
 import { Gender } from "../shared/entities/Gender";
@@ -39,12 +40,16 @@ import { extname, join } from "path";
 import { v4 as uuid } from "uuid";
 import * as moment from "moment";
 import { DateConstant } from "src/common/constant/date.constant";
+import { OtpService } from "./otp.service";
+import { ConfigService } from "@nestjs/config"; 
 
 @Injectable()
 export class UsersService {
   constructor(
     private firebaseProvoder: FirebaseProvider,
-    @InjectRepository(Users) private readonly userRepo: Repository<Users>
+    @InjectRepository(Users) private readonly userRepo: Repository<Users>,
+    private readonly otpService: OtpService,
+    private readonly config: ConfigService
   ) {}
 
   async findAll(userTypeId: string) {
@@ -259,6 +264,7 @@ export class UsersService {
     if (!result) {
       throw new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
+    delete result.user.otp;
     return result;
   }
 
@@ -267,6 +273,7 @@ export class UsersService {
     if (!result) {
       throw new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
+    delete result.otp;
     return result;
   }
 
@@ -277,6 +284,8 @@ export class UsersService {
       this.userRepo.manager
     );
     if (result === (null || undefined)) return null;
+    
+    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
@@ -296,6 +305,8 @@ export class UsersService {
     if (!areEqual) {
       throw new HttpException("Invalid credentials", HttpStatus.NOT_ACCEPTABLE);
     }
+    
+    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
@@ -315,6 +326,8 @@ export class UsersService {
     if (!areEqual) {
       throw new HttpException("Invalid credentials", HttpStatus.NOT_ACCEPTABLE);
     }
+    
+    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
@@ -334,11 +347,49 @@ export class UsersService {
     if (!areEqual) {
       throw new HttpException("Invalid credentials", HttpStatus.NOT_ACCEPTABLE);
     }
+    delete result.user.otp;
+    return this._sanitizeUser(result.user);
+  }
+
+  async findByOtp(userId: string, otp: string) {
+    const result = await this.findOne(
+      { userId, otp },
+      false,
+      this.userRepo.manager
+    );
+    if (result === (null || undefined)) return null;
+    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
   async registerCustomerUser(userDto: CustomerUserDto) {
-    const { username } = userDto;
+    const { username, mobileNumber } = userDto;
+    const otp = generateOTP();
+    const { phone } = require('phone');
+    const countryCode = 'PH';
+    const validateNumber: { isValid: boolean;phoneNumber: string;} = phone(mobileNumber.toString().padStart(11, '0'), {country: countryCode, validateMobilePrefix: true }); 
+    if(!validateNumber.isValid) {
+      throw new HttpException("Invalid number", HttpStatus.BAD_REQUEST);
+    }
+
+    const otpResponse = await this.otpService.send({
+      messages: [
+        {
+          destinations: [
+            {
+              to: validateNumber.phoneNumber
+            }
+          ],
+          text: this.config.get<string>("OTP_DESCFORMAT").toString().replace("{OTP}", otp.toString())
+        }
+      ]
+    });
+    if(otpResponse.requestError && otpResponse.requestError.serviceException && otpResponse.requestError.serviceException.text) {
+      throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
+    }
+    if(!otpResponse.messages || otpResponse.messages.length === 0 || !otpResponse.messages[0] || !otpResponse.messages[0].status) {
+      throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
+    }
     return await this.userRepo.manager.transaction(async (entityManager) => {
       const userInDb = await this.findOne({ username }, false, entityManager);
       if (userInDb) {
@@ -353,6 +404,8 @@ export class UsersService {
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus = new EntityStatus();
       user.entityStatus.entityStatusId = "1";
+      user.otp = otp.toString();
+      user.isVerified = false;
       user = await entityManager.save(Users, user);
       let customer = new Customers();
       customer.user = user;
@@ -366,8 +419,12 @@ export class UsersService {
       customer.address = userDto.address;
       customer.gender = new Gender();
       customer.gender.genderId = userDto.genderId;
+      customer.gender.genderId = userDto.genderId;
       customer = await entityManager.save(Customers, customer);
+      delete customer.user.otp;
       customer.user = await this._sanitizeUser(user);
+      
+      delete customer.user.otp;
       return customer;
     });
   }
@@ -389,6 +446,9 @@ export class UsersService {
       user.role = new Roles();
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus.entityStatusId = "1";
+      const otp = generateOTP();
+      user.otp = otp.toString();
+      user.isVerified = true;
       user = await entityManager.save(Users, user);
       let staff = new Staff();
       staff.user = user;
@@ -398,7 +458,9 @@ export class UsersService {
       staff.gender = new Gender();
       staff.gender.genderId = userDto.genderId;
       staff = await entityManager.save(Staff, staff);
+      delete staff.user.otp;
       staff.user = await this._sanitizeUser(user);
+      delete staff.user.otp;
       return staff;
     });
   }
@@ -421,6 +483,9 @@ export class UsersService {
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus.entityStatusId = "1";
       user.isAdminApproved = true;
+      const otp = generateOTP();
+      user.otp = otp.toString();
+      user.isVerified = true;
       user = await entityManager.save(Users, user);
       let customer = new Customers();
       customer.user = user;
@@ -436,6 +501,7 @@ export class UsersService {
       customer.gender.genderId = userDto.genderId;
       customer = await entityManager.save(Customers, customer);
       customer.user = await this._sanitizeUser(user);
+      delete customer.user.otp;
       return customer;
     });
   }
@@ -458,6 +524,9 @@ export class UsersService {
       user.role.roleId = userDto.roleId;
       user.entityStatus.entityStatusId = "1";
       user.isAdminApproved = true;
+      const otp = generateOTP();
+      user.otp = otp.toString();
+      user.isVerified = true;
       user = await entityManager.save(Users, user);
       let staff = new Staff();
       staff.user = user;
@@ -468,6 +537,7 @@ export class UsersService {
       staff.gender.genderId = userDto.genderId;
       staff = await entityManager.save(Staff, staff);
       staff.user = await this._sanitizeUser(user);
+      delete staff.user.otp;
       return staff;
     });
   }
@@ -501,6 +571,7 @@ export class UsersService {
       await entityManager.save(Customers, customer);
       customer = await this.findOne({ userId }, true, entityManager);
 
+      delete customer.user.otp;
       return customer;
     });
   }
@@ -560,6 +631,7 @@ export class UsersService {
               userProfilePic
             );
             customer = await this.findOne({ userId }, true, entityManager);
+            delete customer.user.otp;
             return customer;
           });
         } else {
@@ -584,7 +656,10 @@ export class UsersService {
               UserProfilePic,
               userProfilePic
             );
-            return await this.findOne({ userId }, true, entityManager);
+            const customer = await this.findOne({ userId }, true, entityManager);
+            
+            delete customer.user.otp;
+            return customer;
           });
         }
       }
@@ -682,6 +757,7 @@ export class UsersService {
       await entityManager.save(Staff, staff);
       staff = await this.findOne({ userId }, true, entityManager);
 
+      delete staff.user.otp;
       return staff;
     });
   }
@@ -701,9 +777,12 @@ export class UsersService {
     currentHashedRefreshToken: string,
     userId: number
   ) {
-    return await this.userRepo.update(userId, {
+    const user = await this.userRepo.update(userId, {
       currentHashedRefreshToken,
     });
+
+    delete user['otp'];
+    return user;
   }
 
   async toggleEnable(enable: boolean, userId: number) {
@@ -711,7 +790,11 @@ export class UsersService {
       enable,
     });
 
-    return await this.findOne({ userId }, true, this.userRepo.manager);
+    const result = await this.findOne({ userId }, true, this.userRepo.manager);
+    if(result.user){
+      delete result.user.otp;
+    }
+    return result;
   }
 
   async updateFirebaseToken(userId: string, firebaseToken: string) {
@@ -724,7 +807,12 @@ export class UsersService {
       firebaseToken,
     });
 
-    return await this.findOne({ userId }, true, this.userRepo.manager);
+    
+    const result = await this.findOne({ userId }, true, this.userRepo.manager);
+    if(result.user){
+      delete result.user.otp;
+    }
+    return result;
   }
 
   async changePassword(
@@ -751,8 +839,10 @@ export class UsersService {
         );
       }
 
-      (user.password = await hash(newPassword)),
-        (user = await entityManager.save(Users, user));
+      user.password = await hash(newPassword);
+      user = await entityManager.save(Users, user);
+      
+      delete user.otp;
       return this._sanitizeUser(user);
     });
   }
@@ -762,7 +852,24 @@ export class UsersService {
       password: await hash(password),
     });
 
-    return await this.findOne({ userId }, true, this.userRepo.manager);
+    const result = await this.findOne({ userId }, true, this.userRepo.manager);
+    if(result.user){
+      delete result.user.otp;
+    }
+    return result;
+  }
+  
+
+  async verifyUser(userId: string) {
+    await this.userRepo.update(userId, {
+      isVerified: true,
+    });
+
+    const result = await this.findById(userId);
+    if(result.user){
+      delete result.user.otp;
+    }
+    return result;
   }
 
   private _sanitizeUser(user: Users) {

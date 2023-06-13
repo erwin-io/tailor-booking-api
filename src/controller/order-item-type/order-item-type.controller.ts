@@ -79,6 +79,7 @@ export class OrderItemTypeController {
     }
   
     @Delete(":orderItemTypeId")
+    @UseGuards(JwtAuthGuard)
     async delete(@Param("orderItemTypeId") orderItemTypeId: string) {
       const res: CustomResponse = {};
       try {

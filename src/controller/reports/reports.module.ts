@@ -11,8 +11,8 @@ import { Reservation } from "src/shared/entities/Reservation";
     HttpModule,
     TypeOrmModule.forFeature([Reservation, Payment]),
   ],
-  controllers: [ReportsController],
-  providers: [ReportsService],
-  exports: [ReportsService],
+    controllers: [ReportsController],
+    providers: [ReportsService],
+    exports: [ReportsService],
 })
 export class ReportsModule {}
