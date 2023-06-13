@@ -13,8 +13,8 @@ export class OtpService {
 
     async send(dto: SendOTPDto) {
         try {
-            const url = `http://localhost:3000/api/v1/virtual-otp/generateAPIResponse`;//fake api for testing
-            // const url = `${this.config.get<string>("OTP_BASEURL")}/sms/2/text/advanced`;
+            const otpEnabled = this.config.get<any>("OTP_ENABLED");
+            const url = otpEnabled.includes("true") ? `${this.config.get<string>("OTP_BASEURL")}/sms/2/text/advanced` : `${this.config.get<string>("BASE_URL")}/api/v1/virtual-otp/generateAPIResponse`;//fake api for testing
             const authorization = `${this.config.get<string>("OTP_AUTHTYPE")} ${this.config.get<string>("OTP_AUTHKEY")}`;
             const result = await firstValueFrom(
                 this.httpService

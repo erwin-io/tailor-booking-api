@@ -118,9 +118,3 @@ export class UpdateCustomerProfilePictureDto extends UserDto {
   @IsOptional()
   userProfilePic: any;
 }
-
-export class VerifyOtpDto extends UserDto {
-  @ApiProperty()
-  @IsNotEmpty()
-  otp: string;
-}

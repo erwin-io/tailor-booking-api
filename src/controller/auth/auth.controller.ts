@@ -1,4 +1,4 @@
-import { UserDto, VerifyOtpDto } from "../../core/dto/users/user.update.dto";
+import { UserDto } from "../../core/dto/users/user.update.dto";
 import {
   CustomerUserDto,
   StaffUserDto,
@@ -22,6 +22,7 @@ import { CustomResponse } from "../../common/helper/customresponse.helpers";
 import { JwtAuthGuard } from "../../core/auth/jwt.auth.guard";
 import { GetUser } from "../../common/decorator/get-user.decorator";
 import { RefreshTokenDto } from "../../core/dto/auth/refresh-token.dto";
+import { UserVerificationDto, VerifyOtpDto } from "src/core/dto/users-verification/users-verification.dto";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -136,11 +137,11 @@ export class AuthController {
     }
   }
 
-  @Post("/verifyOtp")
-  public async verifyOtp(@Body() dto: VerifyOtpDto) {
+  @Post("/createUserVerification")
+  public async createUserVerification(@Body() dto: UserVerificationDto) {
     const res: CustomResponse = {};
     try {
-      res.data = await this.authService.verifyOtp(dto.userId, dto.otp);
+      res.data = await this.authService.createUserVerification(dto);
       res.success = true;
       return res;
     } catch (e) {

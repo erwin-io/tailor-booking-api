@@ -6,8 +6,9 @@ import { Users } from "../../shared/entities/Users";
 import { FirebaseProviderModule } from "src/core/provider/firebase/firebase-provider.module";
 import { OtpService } from "src/services/otp.service";
 import { HttpModule } from "@nestjs/axios";
+import { UserVerification } from "src/shared/entities/UserVerification";
 @Module({
-  imports: [HttpModule, FirebaseProviderModule, TypeOrmModule.forFeature([Users])],
+  imports: [HttpModule, FirebaseProviderModule, TypeOrmModule.forFeature([Users, UserVerification])],
   controllers: [UsersController],
   providers: [UsersService, OtpService],
   exports: [UsersService],

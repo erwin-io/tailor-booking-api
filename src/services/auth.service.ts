@@ -15,6 +15,7 @@ import { ActivityLogService } from "./activity-log.service";
 import { ActivityTypeEnum } from "src/common/enums/activity-type.enum";
 import * as moment from "moment";
 import { DateConstant } from "src/common/constant/date.constant";
+import { UserVerificationDto, VerifyOtpDto } from "src/core/dto/users-verification/users-verification.dto";
 
 @Injectable()
 export class AuthService {
@@ -278,72 +279,77 @@ export class AuthService {
   async findByUserName(username) {
     return await this.usersService.findByUsername(username);
   }
-  
-  async verifyOtp(userId, otp) {
-    const user = await this.usersService.findByOtp(userId, otp);
-    if (!user) {
-      throw new HttpException("Invalid OTP", HttpStatus.BAD_REQUEST);
-    }
-    const result = await this.usersService.verifyUser(userId);
-    if (!result) {
-      throw new HttpException("Error verifying user", HttpStatus.BAD_REQUEST);
-    }
-    
-    const { username, isVerified } = result.user;
-    const accessToken: string = await this.getAccessToken(userId);
-    const refreshToken: string = await this.getRefreshToken(userId);
-    result.user.role.roleId =
-      result.user.role.roleId === null || result.user.role.roleId === undefined
-        ? RoleEnum.GUEST.toString()
-        : result.user.role.roleId;
-    await this.updateRefreshTokenInUser(refreshToken, userId);
-    const userType = result.user.userType;
-    const userTypeIdentityId =
-      userType.userTypeId === UserTypeEnum.CUSTOMER
-        ? result.customerId
-        : result.staffId;
-    const {
-      customerId,
-      firstName,
-      middleName,
-      lastName,
-      email,
-      mobileNumber,
-      address,
-      birthDate,
-      age,
-      gender,
-      fullName,
-      lastCancelledDate,
-      numberOfCancelledAttempt,
-    } = result;
-    return {
-      customerId,
-      userId,
-      username,
-      isVerified,
-      userType,
-      fullName,
-      firstName,
-      middleName,
-      lastName,
-      email,
-      mobileNumber,
-      address,
-      birthDate,
-      age,
-      gender,
-      role: result.user.role,
-      accessToken,
-      refreshToken,
-      userTypeIdentityId,
-      lastCancelledDate,
-      numberOfCancelledAttempt,
-      userProfilePic: result.user.userProfilePic
-        ? result.user.userProfilePic.file.url
-        : null,
-    };
+
+  async createUserVerification(dto: UserVerificationDto) {
+    const { username, mobileNumber } = dto;
+    return await this.usersService.createUserVerification(username, mobileNumber);
   }
+
+  // async verifyOtp(userId, otp) {
+  //   const user = await this.usersService.findByOtp(userId, otp);
+  //   if (!user) {
+  //     throw new HttpException("Invalid OTP", HttpStatus.BAD_REQUEST);
+  //   }
+  //   const result = await this.usersService.verifyUser(userId);
+  //   if (!result) {
+  //     throw new HttpException("Error verifying user", HttpStatus.BAD_REQUEST);
+  //   }
+    
+  //   const { username, isVerified } = result.user;
+  //   const accessToken: string = await this.getAccessToken(userId);
+  //   const refreshToken: string = await this.getRefreshToken(userId);
+  //   result.user.role.roleId =
+  //     result.user.role.roleId === null || result.user.role.roleId === undefined
+  //       ? RoleEnum.GUEST.toString()
+  //       : result.user.role.roleId;
+  //   await this.updateRefreshTokenInUser(refreshToken, userId);
+  //   const userType = result.user.userType;
+  //   const userTypeIdentityId =
+  //     userType.userTypeId === UserTypeEnum.CUSTOMER
+  //       ? result.customerId
+  //       : result.staffId;
+  //   const {
+  //     customerId,
+  //     firstName,
+  //     middleName,
+  //     lastName,
+  //     email,
+  //     mobileNumber,
+  //     address,
+  //     birthDate,
+  //     age,
+  //     gender,
+  //     fullName,
+  //     lastCancelledDate,
+  //     numberOfCancelledAttempt,
+  //   } = result;
+  //   return {
+  //     customerId,
+  //     userId,
+  //     username,
+  //     isVerified,
+  //     userType,
+  //     fullName,
+  //     firstName,
+  //     middleName,
+  //     lastName,
+  //     email,
+  //     mobileNumber,
+  //     address,
+  //     birthDate,
+  //     age,
+  //     gender,
+  //     role: result.user.role,
+  //     accessToken,
+  //     refreshToken,
+  //     userTypeIdentityId,
+  //     lastCancelledDate,
+  //     numberOfCancelledAttempt,
+  //     userProfilePic: result.user.userProfilePic
+  //       ? result.user.userProfilePic.file.url
+  //       : null,
+  //   };
+  // }
 
   verifyJwt(jwt: string): Promise<any> {
     try {

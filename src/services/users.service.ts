@@ -42,12 +42,14 @@ import * as moment from "moment";
 import { DateConstant } from "src/common/constant/date.constant";
 import { OtpService } from "./otp.service";
 import { ConfigService } from "@nestjs/config"; 
+import { UserVerification } from "src/shared/entities/UserVerification";
 
 @Injectable()
 export class UsersService {
   constructor(
     private firebaseProvoder: FirebaseProvider,
     @InjectRepository(Users) private readonly userRepo: Repository<Users>,
+    @InjectRepository(UserVerification) private readonly userVerification: Repository<UserVerification>,
     private readonly otpService: OtpService,
     private readonly config: ConfigService
   ) {}
@@ -273,7 +275,6 @@ export class UsersService {
     if (!result) {
       throw new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
-    delete result.otp;
     return result;
   }
 
@@ -285,7 +286,6 @@ export class UsersService {
     );
     if (result === (null || undefined)) return null;
     
-    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
@@ -305,8 +305,6 @@ export class UsersService {
     if (!areEqual) {
       throw new HttpException("Invalid credentials", HttpStatus.NOT_ACCEPTABLE);
     }
-    
-    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
@@ -327,7 +325,6 @@ export class UsersService {
       throw new HttpException("Invalid credentials", HttpStatus.NOT_ACCEPTABLE);
     }
     
-    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
@@ -347,54 +344,40 @@ export class UsersService {
     if (!areEqual) {
       throw new HttpException("Invalid credentials", HttpStatus.NOT_ACCEPTABLE);
     }
-    delete result.user.otp;
-    return this._sanitizeUser(result.user);
-  }
-
-  async findByOtp(userId: string, otp: string) {
-    const result = await this.findOne(
-      { userId, otp },
-      false,
-      this.userRepo.manager
-    );
-    if (result === (null || undefined)) return null;
-    delete result.user.otp;
     return this._sanitizeUser(result.user);
   }
 
   async registerCustomerUser(userDto: CustomerUserDto) {
-    const { username, mobileNumber } = userDto;
-    const otp = generateOTP();
-    const { phone } = require('phone');
-    const countryCode = 'PH';
-    const validateNumber: { isValid: boolean;phoneNumber: string;} = phone(mobileNumber.toString().padStart(11, '0'), {country: countryCode, validateMobilePrefix: true }); 
-    if(!validateNumber.isValid) {
-      throw new HttpException("Invalid number", HttpStatus.BAD_REQUEST);
-    }
-
-    const otpResponse = await this.otpService.send({
-      messages: [
-        {
-          destinations: [
-            {
-              to: validateNumber.phoneNumber
-            }
-          ],
-          text: this.config.get<string>("OTP_DESCFORMAT").toString().replace("{OTP}", otp.toString())
-        }
-      ]
-    });
-    if(otpResponse.requestError && otpResponse.requestError.serviceException && otpResponse.requestError.serviceException.text) {
-      throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
-    }
-    if(!otpResponse.messages || otpResponse.messages.length === 0 || !otpResponse.messages[0] || !otpResponse.messages[0].status) {
-      throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
-    }
+    let { username, mobileNumber, otp } = userDto;
+    mobileNumber = mobileNumber.toString().padStart(11, '0')
     return await this.userRepo.manager.transaction(async (entityManager) => {
+
+      let userVerification = await entityManager.findOne(UserVerification, {
+        where: {
+          otp,
+          username,
+          mobileNumber
+        },
+        order: {
+          userVerificationId: {
+            direction: "DESC"
+          }
+        }
+      });
+      if(!userVerification) {
+        throw new HttpException("Invalid OTP", HttpStatus.CONFLICT);
+      } else if(userVerification && userVerification.isVerified) {
+        throw new HttpException("Username already exist", HttpStatus.CONFLICT);
+      } else {
+        userVerification.isVerified = true;
+        userVerification = await entityManager.save(UserVerification, userVerification);
+      }
+
       const userInDb = await this.findOne({ username }, false, entityManager);
       if (userInDb) {
         throw new HttpException("Username already exist", HttpStatus.CONFLICT);
       }
+
       let user = new Users();
       user.username = userDto.username;
       user.password = await hash(userDto.password);
@@ -404,8 +387,6 @@ export class UsersService {
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus = new EntityStatus();
       user.entityStatus.entityStatusId = "1";
-      user.otp = otp.toString();
-      user.isVerified = false;
       user = await entityManager.save(Users, user);
       let customer = new Customers();
       customer.user = user;
@@ -413,7 +394,7 @@ export class UsersService {
       customer.middleName = userDto.middleName;
       customer.lastName = userDto.lastName;
       customer.email = userDto.email;
-      customer.mobileNumber = userDto.mobileNumber;
+      customer.mobileNumber = mobileNumber;
       customer.birthDate = moment(userDto.birthDate, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
       customer.age = await (await getAge(new Date(userDto.birthDate))).toString();
       customer.address = userDto.address;
@@ -421,10 +402,7 @@ export class UsersService {
       customer.gender.genderId = userDto.genderId;
       customer.gender.genderId = userDto.genderId;
       customer = await entityManager.save(Customers, customer);
-      delete customer.user.otp;
       customer.user = await this._sanitizeUser(user);
-      
-      delete customer.user.otp;
       return customer;
     });
   }
@@ -446,8 +424,6 @@ export class UsersService {
       user.role = new Roles();
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus.entityStatusId = "1";
-      const otp = generateOTP();
-      user.otp = otp.toString();
       user.isVerified = true;
       user = await entityManager.save(Users, user);
       let staff = new Staff();
@@ -458,9 +434,7 @@ export class UsersService {
       staff.gender = new Gender();
       staff.gender.genderId = userDto.genderId;
       staff = await entityManager.save(Staff, staff);
-      delete staff.user.otp;
       staff.user = await this._sanitizeUser(user);
-      delete staff.user.otp;
       return staff;
     });
   }
@@ -483,8 +457,6 @@ export class UsersService {
       user.role.roleId = RoleEnum.GUEST.toString();
       user.entityStatus.entityStatusId = "1";
       user.isAdminApproved = true;
-      const otp = generateOTP();
-      user.otp = otp.toString();
       user.isVerified = true;
       user = await entityManager.save(Users, user);
       let customer = new Customers();
@@ -501,7 +473,6 @@ export class UsersService {
       customer.gender.genderId = userDto.genderId;
       customer = await entityManager.save(Customers, customer);
       customer.user = await this._sanitizeUser(user);
-      delete customer.user.otp;
       return customer;
     });
   }
@@ -524,8 +495,6 @@ export class UsersService {
       user.role.roleId = userDto.roleId;
       user.entityStatus.entityStatusId = "1";
       user.isAdminApproved = true;
-      const otp = generateOTP();
-      user.otp = otp.toString();
       user.isVerified = true;
       user = await entityManager.save(Users, user);
       let staff = new Staff();
@@ -537,7 +506,6 @@ export class UsersService {
       staff.gender.genderId = userDto.genderId;
       staff = await entityManager.save(Staff, staff);
       staff.user = await this._sanitizeUser(user);
-      delete staff.user.otp;
       return staff;
     });
   }
@@ -570,8 +538,6 @@ export class UsersService {
       customer.gender.genderId = userDto.genderId;
       await entityManager.save(Customers, customer);
       customer = await this.findOne({ userId }, true, entityManager);
-
-      delete customer.user.otp;
       return customer;
     });
   }
@@ -631,7 +597,6 @@ export class UsersService {
               userProfilePic
             );
             customer = await this.findOne({ userId }, true, entityManager);
-            delete customer.user.otp;
             return customer;
           });
         } else {
@@ -657,8 +622,6 @@ export class UsersService {
               userProfilePic
             );
             const customer = await this.findOne({ userId }, true, entityManager);
-            
-            delete customer.user.otp;
             return customer;
           });
         }
@@ -756,8 +719,6 @@ export class UsersService {
 
       await entityManager.save(Staff, staff);
       staff = await this.findOne({ userId }, true, entityManager);
-
-      delete staff.user.otp;
       return staff;
     });
   }
@@ -780,8 +741,6 @@ export class UsersService {
     const user = await this.userRepo.update(userId, {
       currentHashedRefreshToken,
     });
-
-    delete user['otp'];
     return user;
   }
 
@@ -791,9 +750,6 @@ export class UsersService {
     });
 
     const result = await this.findOne({ userId }, true, this.userRepo.manager);
-    if(result.user){
-      delete result.user.otp;
-    }
     return result;
   }
 
@@ -809,9 +765,6 @@ export class UsersService {
 
     
     const result = await this.findOne({ userId }, true, this.userRepo.manager);
-    if(result.user){
-      delete result.user.otp;
-    }
     return result;
   }
 
@@ -841,8 +794,6 @@ export class UsersService {
 
       user.password = await hash(newPassword);
       user = await entityManager.save(Users, user);
-      
-      delete user.otp;
       return this._sanitizeUser(user);
     });
   }
@@ -853,12 +804,74 @@ export class UsersService {
     });
 
     const result = await this.findOne({ userId }, true, this.userRepo.manager);
-    if(result.user){
-      delete result.user.otp;
-    }
     return result;
   }
+
+  async createUserVerification(username, mobileNumber) {
+    try {
+      
+      const userInDb = await this.userRepo.findOneBy({ username });
+      if (userInDb) {
+        throw new HttpException("Username already exist", HttpStatus.CONFLICT);
+      }
+
+      const otp = generateOTP();
+      const { phone } = require('phone');
+      const countryCode = 'PH';
+      const validateNumber: { isValid: boolean;phoneNumber: string;} = phone(mobileNumber.toString().padStart(11, '0'), {country: countryCode, validateMobilePrefix: true }); 
+      if(!validateNumber.isValid) {
+        throw new HttpException("Invalid number", HttpStatus.BAD_REQUEST);
+      }
   
+      const otpResponse = await this.otpService.send({
+        messages: [
+          {
+            destinations: [
+              {
+                to: validateNumber.phoneNumber
+              }
+            ],
+            text: this.config.get<string>("OTP_DESCFORMAT").toString().replace("{OTP}", otp.toString())
+          }
+        ]
+      });
+      if(otpResponse.requestError && otpResponse.requestError.serviceException && otpResponse.requestError.serviceException.text) {
+        throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
+      }
+      if(!otpResponse.messages || otpResponse.messages.length === 0 || !otpResponse.messages[0] || !otpResponse.messages[0].status) {
+        throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
+      }
+      let userVerification = await this.userVerification.findOne({
+        where: { 
+          username,
+          mobileNumber
+        },
+        order: {
+          userVerificationId: {
+            direction: "DESC"
+          }
+        }
+      });
+      if(userVerification && userVerification.isVerified) {
+        throw new HttpException("Username already exist", HttpStatus.BAD_REQUEST);
+      } 
+      else if(userVerification && !userVerification.isVerified) {
+        userVerification.otp = otp;
+      } else if(!userVerification) {
+        userVerification = new UserVerification();
+        userVerification.username = username;
+        userVerification.mobileNumber = mobileNumber;
+        userVerification.otp = otp;
+        userVerification.isVerified = false;
+      }
+
+      userVerification = await this.userVerification.save(userVerification);
+      delete userVerification.otp;
+      return userVerification;
+    } catch(ex) {
+      throw ex;
+    }
+  }
 
   async verifyUser(userId: string) {
     await this.userRepo.update(userId, {
@@ -866,9 +879,6 @@ export class UsersService {
     });
 
     const result = await this.findById(userId);
-    if(result.user){
-      delete result.user.otp;
-    }
     return result;
   }
 
