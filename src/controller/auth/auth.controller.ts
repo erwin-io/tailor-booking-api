@@ -22,7 +22,6 @@ import { CustomResponse } from "../../common/helper/customresponse.helpers";
 import { JwtAuthGuard } from "../../core/auth/jwt.auth.guard";
 import { GetUser } from "../../common/decorator/get-user.decorator";
 import { RefreshTokenDto } from "../../core/dto/auth/refresh-token.dto";
-import { UserVerificationDto, VerifyOtpDto } from "src/core/dto/users-verification/users-verification.dto";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -134,20 +133,6 @@ export class AuthController {
       return this.authService.getNewAccessAndRefreshToken(result.userId);
     } else {
       return null;
-    }
-  }
-
-  @Post("/createUserVerification")
-  public async createUserVerification(@Body() dto: UserVerificationDto) {
-    const res: CustomResponse = {};
-    try {
-      res.data = await this.authService.createUserVerification(dto);
-      res.success = true;
-      return res;
-    } catch (e) {
-      res.success = false;
-      res.message = e.message !== undefined ? e.message : e;
-      return res;
     }
   }
 }

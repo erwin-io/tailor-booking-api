@@ -42,14 +42,12 @@ import * as moment from "moment";
 import { DateConstant } from "src/common/constant/date.constant";
 import { OtpService } from "./otp.service";
 import { ConfigService } from "@nestjs/config"; 
-import { UserVerification } from "src/shared/entities/UserVerification";
 
 @Injectable()
 export class UsersService {
   constructor(
     private firebaseProvoder: FirebaseProvider,
     @InjectRepository(Users) private readonly userRepo: Repository<Users>,
-    @InjectRepository(UserVerification) private readonly userVerification: Repository<UserVerification>,
     private readonly otpService: OtpService,
     private readonly config: ConfigService
   ) {}
@@ -348,30 +346,8 @@ export class UsersService {
   }
 
   async registerCustomerUser(userDto: CustomerUserDto) {
-    let { username, mobileNumber, otp } = userDto;
-    mobileNumber = mobileNumber.toString().padStart(11, '0')
+    let { username } = userDto;
     return await this.userRepo.manager.transaction(async (entityManager) => {
-
-      let userVerification = await entityManager.findOne(UserVerification, {
-        where: {
-          otp,
-          username,
-          mobileNumber
-        },
-        order: {
-          userVerificationId: {
-            direction: "DESC"
-          }
-        }
-      });
-      if(!userVerification) {
-        throw new HttpException("Invalid OTP", HttpStatus.CONFLICT);
-      } else if(userVerification && userVerification.isVerified) {
-        throw new HttpException("Username already exist", HttpStatus.CONFLICT);
-      } else {
-        userVerification.isVerified = true;
-        userVerification = await entityManager.save(UserVerification, userVerification);
-      }
 
       const userInDb = await this.findOne({ username }, false, entityManager);
       if (userInDb) {
@@ -394,7 +370,7 @@ export class UsersService {
       customer.middleName = userDto.middleName;
       customer.lastName = userDto.lastName;
       customer.email = userDto.email;
-      customer.mobileNumber = mobileNumber;
+      customer.mobileNumber = userDto.mobileNumber;
       customer.birthDate = moment(userDto.birthDate, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
       customer.age = await (await getAge(new Date(userDto.birthDate))).toString();
       customer.address = userDto.address;
@@ -804,81 +780,6 @@ export class UsersService {
     });
 
     const result = await this.findOne({ userId }, true, this.userRepo.manager);
-    return result;
-  }
-
-  async createUserVerification(username, mobileNumber) {
-    try {
-      
-      const userInDb = await this.userRepo.findOneBy({ username });
-      if (userInDb) {
-        throw new HttpException("Username already exist", HttpStatus.CONFLICT);
-      }
-
-      const otp = generateOTP();
-      const { phone } = require('phone');
-      const countryCode = 'PH';
-      const validateNumber: { isValid: boolean;phoneNumber: string;} = phone(mobileNumber.toString().padStart(11, '0'), {country: countryCode, validateMobilePrefix: true }); 
-      if(!validateNumber.isValid) {
-        throw new HttpException("Invalid number", HttpStatus.BAD_REQUEST);
-      }
-  
-      const otpResponse = await this.otpService.send({
-        messages: [
-          {
-            destinations: [
-              {
-                to: validateNumber.phoneNumber
-              }
-            ],
-            text: this.config.get<string>("OTP_DESCFORMAT").toString().replace("{OTP}", otp.toString())
-          }
-        ]
-      });
-      if(otpResponse.requestError && otpResponse.requestError.serviceException && otpResponse.requestError.serviceException.text) {
-        throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
-      }
-      if(!otpResponse.messages || otpResponse.messages.length === 0 || !otpResponse.messages[0] || !otpResponse.messages[0].status) {
-        throw new HttpException("Server Error", HttpStatus.BAD_REQUEST);
-      }
-      let userVerification = await this.userVerification.findOne({
-        where: { 
-          username,
-          mobileNumber
-        },
-        order: {
-          userVerificationId: {
-            direction: "DESC"
-          }
-        }
-      });
-      if(userVerification && userVerification.isVerified) {
-        throw new HttpException("Username already exist", HttpStatus.BAD_REQUEST);
-      } 
-      else if(userVerification && !userVerification.isVerified) {
-        userVerification.otp = otp;
-      } else if(!userVerification) {
-        userVerification = new UserVerification();
-        userVerification.username = username;
-        userVerification.mobileNumber = mobileNumber;
-        userVerification.otp = otp;
-        userVerification.isVerified = false;
-      }
-
-      userVerification = await this.userVerification.save(userVerification);
-      delete userVerification.otp;
-      return userVerification;
-    } catch(ex) {
-      throw ex;
-    }
-  }
-
-  async verifyUser(userId: string) {
-    await this.userRepo.update(userId, {
-      isVerified: true,
-    });
-
-    const result = await this.findById(userId);
     return result;
   }
 

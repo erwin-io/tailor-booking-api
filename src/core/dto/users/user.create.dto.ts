@@ -81,8 +81,4 @@ export class CustomerUserDto extends CreateUserDto {
   @ApiProperty()
   @IsNotEmpty()
   genderId: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  otp: string;
 }

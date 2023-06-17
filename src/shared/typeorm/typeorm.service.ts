@@ -24,7 +24,6 @@ import { Payment } from "../entities/Payment";
 import { PaymentType } from "../entities/PaymentType";
 import { ActivityLog } from "../entities/ActivityLog";
 import { ActivityType } from "../entities/ActivityType";
-import { UserVerification } from "../entities/UserVerification";
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -64,7 +63,6 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         PaymentType,
         ActivityLog,
         ActivityType,
-        UserVerification,
       ],
       synchronize: false,// never use TRUE in production!
       ssl: ssl.toLocaleLowerCase().includes("true"),
