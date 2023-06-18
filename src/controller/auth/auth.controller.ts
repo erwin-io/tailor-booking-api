@@ -100,6 +100,34 @@ export class AuthController {
     }
   }
 
+  @Get("/findByEmail/:email")
+  async findByEmail(@Param("email") email: string) {
+    const res: CustomResponse = {};
+    try {
+      res.data = await this.authService.findByEmail(email);
+      res.success = true;
+      return res;
+    } catch (e) {
+      res.success = false;
+      res.message = e.message !== undefined ? e.message : e;
+      return res;
+    }
+  }
+
+  @Get("/findByMobileNumber/:mobileNumber")
+  async findByMobileNumber(@Param("mobileNumber") mobileNumber: string) {
+    const res: CustomResponse = {};
+    try {
+      res.data = await this.authService.findByMobileNumber(mobileNumber);
+      res.success = true;
+      return res;
+    } catch (e) {
+      res.success = false;
+      res.message = e.message !== undefined ? e.message : e;
+      return res;
+    }
+  }
+
   @ApiBearerAuth("jwt")
   @Post("/logout")
   @UseGuards(JwtAuthGuard)

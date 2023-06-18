@@ -279,6 +279,16 @@ export class AuthService {
     return await this.usersService.findByUsername(username);
   }
 
+  async findByEmail(email) {
+    const result = await this.usersService.findOne({ customers: { email } });
+    return result === undefined ? null : result;
+  }
+
+  async findByMobileNumber(mobileNumber) {
+    const result = await this.usersService.findOne({ customers: { mobileNumber } });
+    return result === undefined ? null : result;
+  }
+
   verifyJwt(jwt: string): Promise<any> {
     try {
       return this.jwtService.verifyAsync(jwt, {

@@ -189,6 +189,9 @@ export class UsersService {
     sanitizeUser?: boolean,
     entityManager?: EntityManager
   ) {
+    if(!entityManager || entityManager === undefined) {
+      entityManager = this.userRepo.manager;
+    }
     const user: any = await entityManager.findOne(Users, {
       where: options,
       relations: {
