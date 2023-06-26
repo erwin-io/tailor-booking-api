@@ -49,6 +49,21 @@ export class Reservation {
   @Column("character varying", { name: "ReservationCode" })
   reservationCode: string;
 
+  @Column("timestamp without time zone", {
+    name: "SubmitItemsBeforeDateTime",
+    nullable: true,
+  })
+  submitItemsBeforeDateTime: Date | null;
+
+  @Column("timestamp without time zone", {
+    name: "ToPickupDateTime",
+    nullable: true,
+  })
+  toPickupDateTime: Date | null;
+
+  @Column("character varying", { name: "ReasonToDecline", nullable: true })
+  reasonToDecline: string | null;
+
   @OneToMany(() => Notifications, (notifications) => notifications.reservation)
   notifications: Notifications[];
 

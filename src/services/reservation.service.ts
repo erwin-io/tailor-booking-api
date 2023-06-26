@@ -4,8 +4,11 @@ import * as moment from "moment";
 import { ReservationStatusEnum } from "src/common/enums/reservation-status.enum";
 import { CreateReservationDto } from "src/core/dto/reservation/reservation.create.dto";
 import {
+  ApproveOrderDto,
+  CompleteOrderDto,
+  DeclineOrderDto,
   ProcessOrderDto,
-  UpdateReservationStatusDto,
+  ReservationDto,
 } from "src/core/dto/reservation/reservation.update.dtos";
 import { ReservationViewModel } from "src/core/view-model/reservation.view-model";
 import { Reservation } from "src/shared/entities/Reservation";
@@ -32,13 +35,15 @@ import { extname } from "path";
 import { Files } from "src/shared/entities/Files";
 import { EntityStatus } from "src/shared/entities/EntityStatus";
 import { DateConstant } from "src/common/constant/date.constant";
+import { NotificationService } from "./notification.service";
 @Injectable()
 export class ReservationService {
   constructor(
     @InjectRepository(Reservation)
     private readonly reservationRepo: Repository<Reservation>,
     private firebaseProvoder: FirebaseProvider,
-    private reminderService: ReminderService
+    private reminderService: ReminderService,
+    private notificationService: NotificationService,
   ) {}
 
   async findByFilter(
@@ -315,9 +320,9 @@ export class ReservationService {
     }
   }
 
-  async updateStatus(dto: UpdateReservationStatusDto) {
+  async updateStatus(reservationStatusId: string, dto: ApproveOrderDto | ProcessOrderDto | CompleteOrderDto | DeclineOrderDto | ReservationDto) {
     try {
-      const { reservationId, reservationStatusId } = dto;
+      const { reservationId } = dto;
       return await this.reservationRepo.manager.transaction(
         async (entityManager) => {
           let reservation = await entityManager.findOne(Reservation, {
@@ -331,14 +336,14 @@ export class ReservationService {
               }
             },
           });
-          if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
-            throw new HttpException(
-              "Not allowed to processed!",
-              HttpStatus.BAD_REQUEST
-            );
-          }
           //pending validation
           if (reservation.reservationStatus.reservationStatusId.toString() === ReservationStatusEnum.PENDING.toString()) {
+            if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
+              throw new HttpException(
+                "Unable to change status, reservation is not yet approved",
+                HttpStatus.BAD_REQUEST
+              );
+            }
             if (reservationStatusId.toString() === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is not yet processed",
@@ -417,6 +422,12 @@ export class ReservationService {
                 HttpStatus.BAD_REQUEST
               );
             }
+            if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
+              throw new HttpException(
+                "Unable to change status, reservation is already completed",
+                HttpStatus.BAD_REQUEST
+              );
+            }
             if (reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already completed",
@@ -440,6 +451,12 @@ export class ReservationService {
               );
             }
             if (reservationStatusId.toString() === ReservationStatusEnum.APPROVED.toString()) {
+              throw new HttpException(
+                "Unable to change status, reservation is already declined",
+                HttpStatus.BAD_REQUEST
+              );
+            }
+            if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already declined",
                 HttpStatus.BAD_REQUEST
@@ -473,6 +490,12 @@ export class ReservationService {
                 HttpStatus.BAD_REQUEST
               );
             }
+            if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
+              throw new HttpException(
+                "Unable to change status, reservation is already cancelled",
+                HttpStatus.BAD_REQUEST
+              );
+            }
             if (reservationStatusId.toString() === ReservationStatusEnum.COMPLETED.toString()) {
               throw new HttpException(
                 "Unable to change status, reservation is already cancelled",
@@ -488,18 +511,54 @@ export class ReservationService {
           }
           //cancelled validation end
 
-          if (
-            reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()
-          ) {
-            reservation.adminRemarks = dto.adminRemarks;
+          if (reservationStatusId.toString() === ReservationStatusEnum.APPROVED.toString()) {
+            const dateTime = (dto as ApproveOrderDto).submitItemsBeforeDateTime;
+            reservation.submitItemsBeforeDateTime = new Date(moment(new Date(dateTime), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"));
           }
-          if(!dto.otherFee || dto.otherFee === "" || Number.isNaN(Number(dto.otherFee))) {
-            throw new HttpException(
-              `Invalid value for other fee! `,
-              HttpStatus.BAD_REQUEST
+          if (reservationStatusId.toString() === ReservationStatusEnum.PROCESSED.toString()) {
+            const { assignedStaffId, serviceFee, estCompletionDate } = (dto as ProcessOrderDto);
+            if(!serviceFee || serviceFee === "" || Number.isNaN(Number(serviceFee))) {
+              throw new HttpException(
+                `Invalid value for service fee! `,
+                HttpStatus.BAD_REQUEST
+              );
+            }
+            if(Number(serviceFee) <= 0) {
+              throw new HttpException(
+                `Unable to process, please enter the service fee amount! `,
+                HttpStatus.BAD_REQUEST
+              );
+            }
+            reservation.staff = await entityManager.findOne(
+              Staff,
+              {
+                where: { staffId: assignedStaffId },
+              }
             );
+            reservation.estCompletionDate = moment(new Date(estCompletionDate), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss");
+            reservation.serviceFee = serviceFee;
           }
-          reservation.otherFee = dto.otherFee;
+          if (reservationStatusId.toString() === ReservationStatusEnum.COMPLETED.toString()) {
+            const { toPickupDateTime, otherFee } = (dto as CompleteOrderDto);
+            if(!otherFee || otherFee === "" || Number.isNaN(Number(otherFee))) {
+              throw new HttpException(
+                `Invalid value for other fee! `,
+                HttpStatus.BAD_REQUEST
+              );
+            }
+            reservation.otherFee = otherFee;
+            reservation.toPickupDateTime = new Date(moment(new Date(toPickupDateTime), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"));
+          }
+          if (reservationStatusId.toString() === ReservationStatusEnum.DECLINED.toString()) {
+            const { reasonToDecline } = (dto as DeclineOrderDto);
+            if(!reasonToDecline || reasonToDecline === "") {
+              throw new HttpException(
+                `Invalid value for reasons to decline! `,
+                HttpStatus.BAD_REQUEST
+              );
+            }
+            reservation.reasonToDecline = reasonToDecline;
+          }
           reservation.reservationStatus = await entityManager.findOne(
             ReservationStatus,
             {
@@ -511,87 +570,9 @@ export class ReservationService {
           Number(reservationStatusId) === ReservationStatusEnum.COMPLETED ||
           Number(reservationStatusId) === ReservationStatusEnum.DECLINED)
           {
-            let notif = new Notifications();
-            notif.reservation = reservation;
-            notif.customer = await entityManager.findOne(Customers, {
-              where: { customerId: reservation.customer.customerId },
-            });
-            notif.date = new Date();
-            if (Number(dto.reservationStatusId) === ReservationStatusEnum.APPROVED) {
-              notif.title = NotificationTitleConstant.RESERVATION_APPROVED;
-              notif.description =
-                NotificationDescriptionConstant.RESERVATION_APPROVED.replace(
-                  "{0}",
-                  `${formatId(reservation.reservationId, 5)}`
-                );
-            } else if (Number(dto.reservationStatusId) === ReservationStatusEnum.COMPLETED) {
-              notif.title = NotificationTitleConstant.RESERVATION_COMPLETED;
-              notif.description =
-                NotificationDescriptionConstant.RESERVATION_COMPLETED.replace(
-                  "{0}",
-                  `${formatId(reservation.reservationId, 5)}`
-                );
-            } else if (Number(dto.reservationStatusId) === ReservationStatusEnum.DECLINED) {
-              notif.title = NotificationTitleConstant.RESERVATION_DECLINED;
-              notif.description =
-                NotificationDescriptionConstant.RESERVATION_DECLINED.replace(
-                  "{0}",
-                  `${formatId(reservation.reservationId, 5)}`
-                );
-            }
-            notif = await entityManager.save(Notifications, notif);
-            if (!notif) {
-              throw new HttpException(
-                "Error adding notifications!",
-                HttpStatus.BAD_REQUEST
-              );
-            } else {
-              const notificationId = notif.notificationId;
-              notif = <Notifications>await entityManager
-                .createQueryBuilder("Notifications", "n")
-                .leftJoinAndSelect("n.customer", "c")
-                .leftJoinAndSelect("c.user", "u")
-                .leftJoinAndSelect("n.reservation", "r")
-                .where("n.notificationId = :notificationId", {
-                  notificationId,
-                })
-                .getOne();
-              if (
-                notif.customer.user.firebaseToken &&
-                notif.customer.user.firebaseToken !== ""
-              ) {
-                return await this.firebaseProvoder.app
-                  .messaging()
-                  .sendToDevice(
-                    notif.customer.user.firebaseToken,
-                    {
-                      notification: {
-                        title: notif.title,
-                        body: notif.description,
-                        sound: "notif_alert",
-                      },
-                    },
-                    {
-                      priority: "high",
-                      timeToLive: 60 * 24,
-                      android: { sound: "notif_alert" },
-                    }
-                  )
-                  .then((response: MessagingDevicesResponse) => {
-                    console.log("Successfully sent message:", response);
-                    return reservation;
-                  })
-                  .catch((error) => {
-                    throw new HttpException(
-                      `Error sending notif! ${error.message}`,
-                      HttpStatus.BAD_REQUEST
-                    );
-                  });
-              }
-            }
-          } else {
-            return reservation;
+            await this.notificationService.create(reservation.reservationId.toString(), Number(reservationStatusId))
           }
+          return reservation;
         }
       );
     } catch (e) {
@@ -599,107 +580,4 @@ export class ReservationService {
     }
   }
 
-  async processOrder(dto: ProcessOrderDto) {
-    return await this.reservationRepo.manager.transaction(
-      async (entityManager) => {
-        const { reservationId, assignedStaffId } = dto;
-        let reservation = await entityManager.findOne(Reservation, {
-          where: { reservationId },
-          relations: {
-            reservationLevel: true,
-            reservationStatus: true,
-            customer: true
-          },
-        });
-        reservation.staff = await entityManager.findOne(
-          Staff,
-          {
-            where: { staffId: assignedStaffId },
-          }
-        );
-        reservation.reservationStatus = await entityManager.findOne(
-          ReservationStatus,
-          {
-            where: { reservationStatusId: ReservationStatusEnum.PROCESSED.toString() },
-          }
-        );
-        reservation.estCompletionDate = moment(dto.estCompletionDate, DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD");
-        if(!dto.serviceFee || dto.serviceFee === "" || Number.isNaN(Number(dto.serviceFee))) {
-          throw new HttpException(
-            `Invalid value for service fee! `,
-            HttpStatus.BAD_REQUEST
-          );
-        }
-        if(Number(dto.serviceFee) <= 0) {
-          throw new HttpException(
-            `Unable to process, please enter the service fee amount! `,
-            HttpStatus.BAD_REQUEST
-          );
-        }
-        reservation.serviceFee = dto.serviceFee;
-        reservation = await entityManager.save(Reservation, reservation);
-        let notif = new Notifications();
-        notif.reservation = reservation;
-        notif.customer = await entityManager.findOne(Customers, {
-          where: { customerId: reservation.customer.customerId },
-        });
-        notif.title = NotificationTitleConstant.RESERVATION_PROCESSED;
-        notif.description =
-          NotificationDescriptionConstant.RESERVATION_PROCESSED.replace(
-            "{0}",
-            `${formatId(reservation.reservationId, 5)}`
-          );
-        notif.date = new Date();
-        notif = await entityManager.save(Notifications, notif);
-        if (!notif) {
-          throw new HttpException(
-            "Error adding notifications!",
-            HttpStatus.BAD_REQUEST
-          );
-        } else {
-          const notificationId = notif.notificationId;
-          notif = <Notifications>await entityManager
-            .createQueryBuilder("Notifications", "n")
-            .leftJoinAndSelect("n.customer", "c")
-            .leftJoinAndSelect("c.user", "u")
-            .leftJoinAndSelect("n.reservation", "r")
-            .where("n.notificationId = :notificationId", {
-              notificationId,
-            })
-            .getOne();
-          if (
-            notif.customer.user.firebaseToken &&
-            notif.customer.user.firebaseToken !== ""
-          ) {
-            await this.firebaseProvoder.app
-              .messaging()
-              .sendToDevice(
-                notif.customer.user.firebaseToken,
-                {
-                  notification: {
-                    title: notif.title,
-                    body: notif.description,
-                    sound: "notif_alert",
-                  },
-                },
-                {
-                  priority: "high",
-                  timeToLive: 60 * 24,
-                  android: { sound: "notif_alert" },
-                }
-              )
-              .then((response: MessagingDevicesResponse) => {
-                console.log("Successfully sent message:", response);
-                return reservation;
-              })
-              .catch((error) => {
-                throw new HttpException(
-                  `Error sending notif! ${error.message}`,
-                  HttpStatus.BAD_REQUEST
-                );
-              });
-          }
-        }
-    });
-  }
 }

@@ -19,27 +19,32 @@ import { JwtAuthGuard } from "src/core/auth/jwt.auth.guard";
 // @ApiBearerAuth("jwt")
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
-  
-  @Get("getPaymentsInvoice")
-  @ApiQuery({ name: "paymentId", required: false })
+
+  @Get("getSalesAdvance")
+  @ApiQuery({ name: "dateFrom", required: false, type: Date })
+  @ApiQuery({ name: "dateTo", required: false, type: Date })
   // @UseGuards(JwtAuthGuard)
-  async getPaymentsInvoice(
-    @Query("paymentId") paymentId: string = "",
-    @Res() response: Response
+  async getSalesAdvance(
+    @Query("dateFrom") dateFrom = new Date(),
+    @Query("dateTo") dateTo = new Date()
   ) {
     const res: CustomResponse = {};
     try {
-      const stream: Stream = await this.reportsService.getPaymentsInvoice(paymentId);
-
-      response.set({
-        "Content-Type": "application/pdf",
-      });
-
-      stream.pipe(response);
+      const res: CustomResponse = {};
+      res.data = await this.reportsService.getSalesAdvance(
+        dateFrom && dateFrom !== undefined && new Date(dateFrom) instanceof Date
+          ? new Date(dateFrom)
+          : new Date(),
+        dateTo && dateTo !== undefined && new Date(dateTo) instanceof Date
+          ? new Date(dateTo)
+          : new Date()
+      );
+      res.success = true;
+      return res;
     } catch (e) {
       res.success = false;
       res.message = e.message !== undefined ? e.message : e;
-      response.send(res);
+      return res;
     }
   }
 }

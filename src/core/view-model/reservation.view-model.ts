@@ -25,6 +25,9 @@ export class ReservationViewModel {
   payments: PaymentViewModel[];
   serviceFee: number = 0;
   otherFee: number = 0;
+  submitItemsBeforeDateTime: Date;
+  toPickupDateTime: Date;
+  reasonToDecline: string;
   constructor(model: Reservation | undefined) {
     if (!model || model === null) {
       return null;
@@ -44,6 +47,9 @@ export class ReservationViewModel {
     this.payments = model.payments;
     this.serviceFee = Number(model.serviceFee);
     this.otherFee = Number(model.otherFee);
+    this.submitItemsBeforeDateTime = model.submitItemsBeforeDateTime;
+    this.toPickupDateTime = model.toPickupDateTime;
+    this.reasonToDecline = model.reasonToDecline;
   }
 }
 

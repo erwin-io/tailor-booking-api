@@ -1,73 +1,52 @@
 import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { HttpService } from "@nestjs/axios";
-import { catchError, firstValueFrom } from "rxjs";
 import * as moment from "moment";
-import { ConfigService } from "@nestjs/config";
 import { Payment } from "src/shared/entities/Payment";
+import { SalesViewModel } from "src/core/view-model/sales.view-model";
+import { Reservation } from "src/shared/entities/Reservation";
 
 @Injectable()
 export class ReportsService {
   constructor(
     @InjectRepository(Payment)
-    private readonly paymentRepo: Repository<Payment>,
-    private readonly httpService: HttpService,
-    @Inject(ConfigService)
-    private readonly config: ConfigService
-  ) {}
+    private readonly paymentRepo: Repository<Payment>) {}
 
-  async getPaymentsInvoice(paymentId: string) {
+  async getSalesAdvance(dateFrom: Date, dateTo: Date) {
     try {
-      const receipt = <Payment>await this.paymentRepo.manager
+      
+      dateFrom = new Date(dateFrom.setHours(0,0,0,0));
+      dateTo = new Date(new Date(dateTo.setDate(dateTo.getDate() + 1)).setHours(0,0,0,0));
+      const result = <Payment[]>await this.paymentRepo.manager
         .createQueryBuilder("Payment", "p")
         .leftJoinAndSelect("p.reservation", "r")
         .leftJoinAndSelect("r.customer", "c")
+        .leftJoinAndSelect("r.staff", "s")
         .leftJoinAndSelect("p.paymentType", "pt")
-        .where("p.paymentId = :paymentId", {paymentId})
-        .andWhere("p.isVoid = :isVoid", { isVoid: false })
-        .getOne();
-
-      const data = {
-        name: "Invoice",
-        paymentId,
-        paymentDate: receipt.paymentDate,
-        serviceFee: receipt.reservation.serviceFee,
-        otherFee: receipt.reservation.otherFee,
-        fullName: receipt.reservation.customer.firstName + ' ' + receipt.reservation.customer.lastName,
-        totalAmount : Number(receipt.reservation.serviceFee) + Number(receipt.reservation.otherFee),
-      };
-      const params = {
-        template: {
-          name: "payments-receipt",
-        },
-        data: data,
-      };
-      const url = this.config.get<string>("JSREPORTS_URL").toString();
-      const username = this.config.get<string>("JSREPORTS_USERNAME").toString();
-      const password = this.config.get<string>("JSREPORTS_PASSWORD").toString();
-      const result = await firstValueFrom(
-        this.httpService
-          .post<any>(url, JSON.stringify(params), {
-            auth: {
-              username,
-              password,
-            },
-            responseType: "stream",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-          .pipe(
-            catchError((error) => {
-              throw new HttpException(
-                error.response.data,
-                HttpStatus.BAD_REQUEST
-              );
-            })
-          )
-      );
-      return result.data;
+        .where(`
+        (p.paymentDate between :dateFrom AND :dateTo) AND
+        p.isVoid = false
+        `)
+        .setParameters({
+          dateFrom,
+          dateTo,
+          isVoid: false
+        })
+        .getMany();
+      const sales: SalesViewModel[] = <any>result.map(x=> {
+        return {
+          reservationCode: x.reservation.reservationCode,
+          customerName: x.reservation.customer.firstName + ' ' + x.reservation.customer.lastName,
+          tailorName: x.reservation.staff.name,
+          paymentId: x.paymentId,
+          paymentDate: x.paymentDate,
+          referenceNo: x.referenceNo,
+          isVoid: x.isVoid,
+          paymentType: x.paymentType.name,
+          amount: Number(x.reservation.serviceFee) + Number(x.reservation.otherFee),
+        }
+      })
+      return sales;
     } catch (e) {
       throw e;
     }

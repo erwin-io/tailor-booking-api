@@ -12,12 +12,16 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ReservationStatusEnum } from "src/common/enums/reservation-status.enum";
 import { CustomResponse } from "src/common/helper/customresponse.helpers";
 import { JwtAuthGuard } from "src/core/auth/jwt.auth.guard";
 import { CreateReservationDto } from "src/core/dto/reservation/reservation.create.dto";
 import {
+  ApproveOrderDto,
+  CompleteOrderDto,
+  DeclineOrderDto,
   ProcessOrderDto,
-  UpdateReservationStatusDto,
+  ReservationDto,
 } from "src/core/dto/reservation/reservation.update.dtos";
 import { ReservationService } from "src/services/reservation.service";
 
@@ -139,13 +143,13 @@ export class ReservationController {
     }
   }
 
-  @Put("updateReservationStatus")
+  @Put("approveOrder")
   @UseGuards(JwtAuthGuard)
-  async updateReservationStatus(@Body() dto: UpdateReservationStatusDto) {
+  async approveOrder(@Body() dto: ApproveOrderDto) {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};
-      res.data = await this.reservationService.updateStatus(dto);
+      res.data = await this.reservationService.updateStatus(ReservationStatusEnum.APPROVED.toString(), dto);
       res.success = true;
       return res;
     } catch (e) {
@@ -161,7 +165,55 @@ export class ReservationController {
     const res: CustomResponse = {};
     try {
       const res: CustomResponse = {};
-      res.data = await this.reservationService.processOrder(dto);
+      res.data = await this.reservationService.updateStatus(ReservationStatusEnum.PROCESSED.toString(), dto);
+      res.success = true;
+      return res;
+    } catch (e) {
+      res.success = false;
+      res.message = e.message !== undefined ? e.message : e;
+      return res;
+    }
+  }
+
+  @Put("completeOrder")
+  @UseGuards(JwtAuthGuard)
+  async completeOrder(@Body() dto: CompleteOrderDto) {
+    const res: CustomResponse = {};
+    try {
+      const res: CustomResponse = {};
+      res.data = await this.reservationService.updateStatus(ReservationStatusEnum.COMPLETED.toString(), dto);
+      res.success = true;
+      return res;
+    } catch (e) {
+      res.success = false;
+      res.message = e.message !== undefined ? e.message : e;
+      return res;
+    }
+  }
+
+  @Put("declineOrder")
+  @UseGuards(JwtAuthGuard)
+  async declineOrder(@Body() dto: DeclineOrderDto) {
+    const res: CustomResponse = {};
+    try {
+      const res: CustomResponse = {};
+      res.data = await this.reservationService.updateStatus(ReservationStatusEnum.DECLINED.toString(), dto);
+      res.success = true;
+      return res;
+    } catch (e) {
+      res.success = false;
+      res.message = e.message !== undefined ? e.message : e;
+      return res;
+    }
+  }
+
+  @Put("cancelOrder")
+  @UseGuards(JwtAuthGuard)
+  async cancelOrder(@Body() dto: ReservationDto) {
+    const res: CustomResponse = {};
+    try {
+      const res: CustomResponse = {};
+      res.data = await this.reservationService.updateStatus(ReservationStatusEnum.CANCELLED.toString(), dto);
       res.success = true;
       return res;
     } catch (e) {

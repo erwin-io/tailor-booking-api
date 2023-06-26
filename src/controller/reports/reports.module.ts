@@ -8,7 +8,6 @@ import { Reservation } from "src/shared/entities/Reservation";
 
 @Module({
   imports: [
-    HttpModule,
     TypeOrmModule.forFeature([Reservation, Payment]),
   ],
     controllers: [ReportsController],

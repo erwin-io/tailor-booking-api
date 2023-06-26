@@ -10,18 +10,16 @@ export class ReservationDto {
   reservationId: string;
 }
 
-export class UpdateReservationStatusDto extends ReservationDto {
-  @ApiProperty()
+export class ApproveOrderDto extends ReservationDto {
+  @ApiProperty({
+    type: Date,
+    default: moment(new Date(), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"),
+  })
+  @IsDateString()
+  @Type(() => Date)
+  @Transform((value) => moment(new Date(value.value), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"))
   @IsNotEmpty()
-  reservationStatusId: string;
-  
-  @ApiProperty()
-  @IsOptional()
-  adminRemarks;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  otherFee: string = "0";
+  submitItemsBeforeDateTime: Date;
 }
 
 export class ProcessOrderDto extends ReservationDto {
@@ -31,15 +29,38 @@ export class ProcessOrderDto extends ReservationDto {
   
   @ApiProperty({
     type: Date,
-    default: moment(new Date(), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD"),
+    default: moment(new Date(), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"),
   })
   @IsDateString()
   @Type(() => Date)
-  @Transform((value) => moment(new Date(value.value), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD"))
+  @Transform((value) => moment(new Date(value.value), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"))
   @IsNotEmpty()
   estCompletionDate: Date;
 
   @ApiProperty()
   @IsNotEmpty()
   serviceFee: string = "0";
+}
+
+export class CompleteOrderDto extends ReservationDto {
+  @ApiProperty({
+    type: Date,
+    default: moment(new Date(), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"),
+  })
+  @IsDateString()
+  @Type(() => Date)
+  @Transform((value) => moment(new Date(value.value), DateConstant.DATE_LANGUAGE).format("YYYY-MM-DD HH:mm:ss"))
+  @IsNotEmpty()
+  toPickupDateTime: Date;
+
+
+  @ApiProperty()
+  @IsNotEmpty()
+  otherFee: string = "0";
+}
+
+export class DeclineOrderDto extends ReservationDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  reasonToDecline: string;
 }

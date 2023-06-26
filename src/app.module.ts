@@ -12,17 +12,20 @@ import { DashboardModule } from "./controller/dashboard/dashboard.module";
 import { FirebaseProviderModule } from "./core/provider/firebase/firebase-provider.module";
 import * as Joi from "@hapi/joi";
 import { ReservationModule } from "./controller/reservation/reservation.module";
-import { OrderItemTypeService } from './services/order-item-type.service';
-import { OrderItemTypeModule } from './controller/order-item-type/order-item-type.module';
-import { OrderItemModule } from './controller/order-item/order-item.module';
-import { OrderItemService } from './services/order-item.service';
+import { OrderItemTypeService } from "./services/order-item-type.service";
+import { OrderItemTypeModule } from "./controller/order-item-type/order-item-type.module";
+import { OrderItemModule } from "./controller/order-item/order-item.module";
+import { OrderItemService } from "./services/order-item.service";
 import { PaymentsModule } from "./controller/payments/payments.module";
-import { ActivityLogService } from './services/activity-log.service';
-import { ActivityLogController } from './controller/activity-log/activity-log.controller';
-import { ActivityLogModule } from './controller/activity-log/activity-log.module';
-import { VirtualOtpService } from './services/virtual-otp.service';
-import { VirtualOtpModule } from './controller/virtual-otp/virtual-otp.module';
-import { OtpService } from './services/otp.service';
+import { ActivityLogService } from "./services/activity-log.service";
+import { ActivityLogController } from "./controller/activity-log/activity-log.controller";
+import { ActivityLogModule } from "./controller/activity-log/activity-log.module";
+import { VirtualOtpService } from "./services/virtual-otp.service";
+import { VirtualOtpModule } from "./controller/virtual-otp/virtual-otp.module";
+import { OtpService } from "./services/otp.service";
+import { ReportsModule } from "./controller/reports/reports.module";
+import { MonitoringService } from "./services/monitoring.service";
+import { MonitoringModule } from "./controller/monitoring/monitoring.module";
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 @Module({
   imports: [
@@ -47,6 +50,8 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     PaymentsModule,
     ActivityLogModule,
     VirtualOtpModule,
+    ReportsModule,
+    MonitoringModule,
   ],
   providers: [AppService],
   controllers: [],

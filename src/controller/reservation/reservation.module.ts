@@ -5,10 +5,12 @@ import { ReservationService } from "src/services/reservation.service";
 import { Reservation } from "src/shared/entities/Reservation";
 import { ReminderModule } from "../reminder/reminder.module";
 import { ReservationController } from "./reservation.controller";
+import { NotificationModule } from "../notification/notification.module";
 
 @Module({
   imports: [
     ReminderModule,
+    NotificationModule,
     FirebaseProviderModule,
     TypeOrmModule.forFeature([Reservation]),
   ],
